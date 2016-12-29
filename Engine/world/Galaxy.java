@@ -34,7 +34,6 @@ public class Galaxy {
 		this.starScale = (size / 150000.0f);
 		center = new Sphere(new Vector3f(galaxyPosition), new Vector3f(galaxyVelocity), new Vector3f(50, 50, 50), 300 * starScale, (float)Math.pow(500 * starScale, 3.0));
 		world.addSphere(center);
-		System.out.println("Galxy " + name + " size " + size + " center raduis " + center.scale);
 		Matrix4f matrix = new Matrix4f();
 		matrix.rotate(galaxyRotation.x, new Vector3f(1, 0, 0));
 		matrix.rotate(galaxyRotation.y, new Vector3f(0, 1, 0));
@@ -77,7 +76,6 @@ public class Galaxy {
 			distance = 0;
 			angleChange += Math.PI / (bands / 2.0);
 		}
-		System.out.println(world.getSphereCount() + " spheres!");
 		worldin.addGalaxy(this);
 	}
 

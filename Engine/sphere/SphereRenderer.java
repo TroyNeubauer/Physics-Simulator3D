@@ -42,7 +42,7 @@ public class SphereRenderer {
 
 		for(Sphere sphere : origionalPlanets) {
 			if(sphere == null)continue;
-			double distance = Maths.approximateDistanceBetweenPoints(sphere.position, camera.getPosition()) / sphere.scale;
+			double distance = Maths.getDistanceBetweenPoints(camera.getPosition(), sphere.position) / sphere.scale;
 			int currentLOD = this.lod.get((float) distance);
 			List<Sphere> batch = planets.get(currentLOD);
 			if (batch != null) {

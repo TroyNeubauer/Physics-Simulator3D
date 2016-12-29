@@ -37,7 +37,6 @@ public class RenderEngine {
 		if(time >= 5.0f){
 			time = 0.0f;
 			System.gc();
-			System.out.println(world.getSphereCount());
 		}
 	}
 

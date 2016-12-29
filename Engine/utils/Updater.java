@@ -2,8 +2,7 @@ package utils;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.troy.planettest.main.Main;
-
+import main.Main;
 import renderEngine.RenderEngine;
 
 public class Updater implements Runnable {

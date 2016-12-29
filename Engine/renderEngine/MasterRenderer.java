@@ -12,7 +12,7 @@ import world.World;
 public class MasterRenderer {
 
 	private SphereRenderer shpereRenderer;
-	public static final float NEAR_PLANE = 0.1f, FAR_PLANE = Float.MAX_VALUE;
+	public static final float NEAR_PLANE = 0.01f, FAR_PLANE = 1000000000;
 
 	protected MasterRenderer(ICamera camera) {
 		shpereRenderer = new SphereRenderer(camera);
