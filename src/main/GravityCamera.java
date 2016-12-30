@@ -46,7 +46,7 @@ public class GravityCamera extends ICamera {
 
 			if(distance < sphere.scale){
 				Vector3f distanceRelativeToSphere = Vector3f.subtract(this.position, sphere.position);
-				distanceRelativeToSphere.setLength(sphere.scale + 0.0001f);
+				distanceRelativeToSphere.setLength(sphere.scale + 1f);
 				this.position.set(Vector3f.add(sphere.position, distanceRelativeToSphere));
 				this.velocity.zero();
 			} else {

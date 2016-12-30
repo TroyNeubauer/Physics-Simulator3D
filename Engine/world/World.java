@@ -7,6 +7,7 @@ import com.troy.troyberry.math.*;
 import com.troy.troyberry.opengl.util.ICamera;
 import com.troy.troyberry.opengl.util.Window;
 
+import main.GravityCamera;
 import utils.Updater;
 
 public class World {
@@ -84,7 +85,8 @@ public class World {
 		return total.scale(1.0f / (float)samples);
 	}
 	
-	public World(ICamera cam, boolean backgroundStars){
+	public World(ICamera cam, boolean backgroundStars) {
+		if(cam instanceof GravityCamera) ((GravityCamera)cam).setWorld(this);
 		this.camera = cam;
 		this.objects = new ArrayList<Sphere>(10000);
 		this.galaxyies = new ArrayList<Galaxy>();
