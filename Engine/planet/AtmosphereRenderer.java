@@ -34,6 +34,7 @@ public class AtmosphereRenderer
         ((sphere instanceof Planet)))
       {
         distance = Maths.getDistanceBetweenPoints(world.getCamera().getPosition(), sphere.position) / sphere.scale;
+        if(distance > PSGameSettings.ATMOSPHERE_RENDER_DISTANCE)continue;
         currentLOD = this.lod.get((float)distance);
         List<Planet> batch = (List)list.get(Integer.valueOf(currentLOD));
         if (batch != null)

@@ -6,6 +6,7 @@ import java.util.List;
 import com.troyberry.math.*;
 import com.troyberry.opengl.util.GLColorUtil;
 
+import planet.Planet;
 import sphere.Sphere;
 import star.Star;
 
@@ -56,10 +57,11 @@ public class Galaxy {
 					float thisDistance = Maths.randRange(0, distanceFromLast);
 					float x = Maths.sinFloat(thisAngle) * thisDistance;
 					float z = Maths.cosFloat(thisAngle) * thisDistance;
-					Sphere s = new Star(new Vector3f(groupX + x, Maths.randRange(-diskHeight, diskHeight), groupZ + z), new Vector3f(),
+					/**Sphere s = new Star(new Vector3f(groupX + x, Maths.randRange(-diskHeight, diskHeight), groupZ + z), new Vector3f(),
 							GLColorUtil.randomStarColor(25), Maths.randRange(10.0f, 50.0f), 
 							(float) Math.pow(Maths.randRange(5.0f, 30.0f) * starScale, 3.0));
-					
+					*/
+					Planet s = new Planet(new Vector3f(groupX + x, Maths.randRange(-diskHeight, diskHeight), groupZ + z), new Vector3f(), new Vector3f(255, 255, 255), 1000, 200, 0.1f, 50.0f);
 					Vector2f vel = new Vector2f(s.position.x, s.position.z).rotate(85);
 					float distFromCenter = Maths.getDistanceBetweenPoints(galaxyPosition, s.position);
 					vel.setLength(distFromCenter / 4000 * starScale * starScale);
