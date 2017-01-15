@@ -1,29 +1,26 @@
 package main;
 
-import com.troy.troyberry.math.*;
-import com.troy.troyberry.opengl.input.Mouse;
-import com.troy.troyberry.opengl.util.*;
+import com.troyberry.math.*;
+import com.troyberry.opengl.input.Mouse;
+import com.troyberry.opengl.util.ICamera;
+import com.troyberry.opengl.util.Window;
 
 import renderEngine.MasterRenderer;
-import utils.Controls;
-import utils.Updater;
 
 public class FreeCamera extends ICamera {
 	
-	private SmoothFloat speed = new SmoothFloat(0.1f, 10);
+	private SmoothFloat speed = new SmoothFloat(100f, 10);
 	
 	public FreeCamera() {
-		super(MasterRenderer.NEAR_PLANE, MasterRenderer.FAR_PLANE);
+		super(MasterRenderer.NEAR_PLANE);
 	}
 
 	@Override
 	public void moveRotation() {
 		pitch += Mouse.getDY() / 10.0f;
 		yaw   += Mouse.getDX() / 10.0f;
-		if (pitch > 90)
-			pitch = 90;
-		if (pitch < -90)
-			pitch = -90;
+		
+		pitch %= 360.0f;
 		yaw %= 360.0f;
 		roll %= 360.0f;
 	}
@@ -38,13 +35,13 @@ public class FreeCamera extends ICamera {
 		Vector3f temp = new Vector3f(forward.x, 0, forward.y);
 		
 		if(Controls.SPACE.isPressedUpdateThread()) {
-			temp.y += speed.get() * Window.getFrameTimeSeconds();
+			temp.y += 1;
 		}
 		if(Controls.SHIFT.isPressedUpdateThread()){
-			temp.y -= speed.get() * Window.getFrameTimeSeconds();
+			temp.y -= 1;
 		}
 		temp.setLength(speed.get());
-		this.position.add(temp);
+		this.position.add(temp.scale(Window.getFrameTimeSeconds()));
 		speed.update(Window.getFrameTimeSeconds());
 		speed.setTarget(speed.getTarget() + speed.getTarget() * (Mouse.getDWheel() * 3) * Window.getFrameTimeSeconds());
 		speed.clamp(0.000005f, 999999f);
@@ -67,10 +64,5 @@ public class FreeCamera extends ICamera {
 			}
 		
 		return total;
-	}
-
-	@Override
-	public void render() {
-		
 	}
 }

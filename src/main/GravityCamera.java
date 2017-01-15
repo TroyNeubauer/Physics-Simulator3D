@@ -1,13 +1,13 @@
 package main;
 
-import com.troy.troyberry.math.Maths;
-import com.troy.troyberry.math.Vector3f;
-import com.troy.troyberry.opengl.input.Mouse;
-import com.troy.troyberry.opengl.util.ICamera;
-import com.troy.troyberry.opengl.util.Window;
+import com.troyberry.math.Maths;
+import com.troyberry.math.Vector3f;
+import com.troyberry.opengl.input.Mouse;
+import com.troyberry.opengl.util.ICamera;
+import com.troyberry.opengl.util.Window;
 
 import renderEngine.MasterRenderer;
-import world.Sphere;
+import sphere.Sphere;
 import world.World;
 
 public class GravityCamera extends ICamera {
@@ -15,25 +15,17 @@ public class GravityCamera extends ICamera {
 	private World world;
 	
 	public GravityCamera() {
-		super(MasterRenderer.NEAR_PLANE, MasterRenderer.FAR_PLANE);
+		super(MasterRenderer.NEAR_PLANE);
 	}
 
 	@Override
 	public void moveRotation() {
 		pitch += Mouse.getDY() / 10.0f;
 		yaw   += Mouse.getDX() / 10.0f;
-		if (pitch > 90)
-			pitch = 90;
-		if (pitch < -90)
-			pitch = -90;
+
 		roll %= 360.0f;
 		this.yaw %= 360;
 		updateViewMatrix();
-	}
-	
-	@Override
-	public void render() {
-		
 	}
 
 	@Override

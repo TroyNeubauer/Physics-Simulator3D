@@ -1,11 +1,11 @@
 package renderEngine;
 
-import com.troy.troyberry.opengl.input.*;
-import com.troy.troyberry.opengl.util.*;
-import com.troy.troyberry.utils.graphics.ResolutionUtil;
+import com.troyberry.graphics.ResolutionUtil;
+import com.troyberry.opengl.input.*;
+import com.troyberry.opengl.util.*;
 
-import utils.Controls;
-import utils.Updater;
+import main.Controls;
+import update.UpdateMaster;
 import world.World;
 
 /**
@@ -26,13 +26,18 @@ public class RenderEngine {
 		this.camera = camera;
 	}
 	
+	/**
+	 * Updates the render engine so it is ready for the next frame.
+	 * This method updates the display as well as updating the keyboard and mouse
+	 * The name update may be misleading, this method must only be called from the Open GL thread!
+	 * @param world
+	 */
 	public void update(World world) {
-		if(!Controls.GO_WIREFRAME.isPressedUpdateThread())world.updateOnRender();
+		window.update();
+		if(!Controls.SLOW.isPressedUpdateThread())world.updateOnRender();
 		camera.moveOther();
 		Mouse.setGrabbed(true);
 		KeyHandler.update();
-		window.update();
-		renderer.update();
 		time += Window.getFrameTimeSeconds();
 		if(time >= 5.0f){
 			time = 0.0f;
@@ -45,20 +50,19 @@ public class RenderEngine {
 	}
 
 	public void close() {
-		Updater.stop();
 		window.hide();
-		renderer.cleanUp();
+		UpdateMaster.shutdown();
 		window.destroy();
-		System.exit(0);
+		renderer.cleanUp();
 	}
 
 	public static RenderEngine init(ICamera camera) {
 		if(!GlUtil.init()){
 			System.exit(1);
 		}
-		Window window = new Window(ResolutionUtil.getscaledResolution(0.8));
+		Window window = new Window(ResolutionUtil.getscaledResolution(0.75));
 		window.setClearColor(0, 0, 0);
-		camera.createProjectionMatrix();
+		camera.update();
 		Mouse.init(window);
 		Mouse.setCamera(camera);
 		Keyboard.init(window);
