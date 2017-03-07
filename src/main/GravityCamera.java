@@ -19,7 +19,7 @@ public class GravityCamera extends ICamera {
 	}
 
 	@Override
-	public void moveRotation() {
+	public void onMouseMove() {
 		pitch += Mouse.getDY() / 10.0f;
 		yaw   += Mouse.getDX() / 10.0f;
 
@@ -29,21 +29,12 @@ public class GravityCamera extends ICamera {
 	}
 
 	@Override
-	public void moveOther() {
+	public void move() {
 		for(Sphere sphere : world.getObjects()){
 			if(sphere == null) continue;
 			double distance = Maths.getDistanceBetweenPoints(this.position.x, this.position.y, this.position.z, sphere.position.x, sphere.position.y, sphere.position.z);
 			Vector3f vecBetween = Vector3f.subtract(sphere.position, this.position);
-			vecBetween.setLength((float)(sphere.mass / (distance * distance)));
-
-			if(distance < sphere.scale){
-				Vector3f distanceRelativeToSphere = Vector3f.subtract(this.position, sphere.position);
-				distanceRelativeToSphere.setLength(sphere.scale + 1f);
-				this.position.set(Vector3f.add(sphere.position, distanceRelativeToSphere));
-				this.velocity.zero();
-			} else {
-				this.velocity.add(vecBetween.scale(0.01f));
-			}
+			vecBetween.setLength((float)(sphere.mass / (distance * distance)) * PSGameSettings.GRAVITY_CONSTANT);
 		}
 		this.position.add(new Vector3f(velocity).scale(Window.getFrameTimeSeconds()));
 		updateViewMatrix();

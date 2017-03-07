@@ -6,13 +6,13 @@ import java.util.List;
 import com.troyberry.math.*;
 import com.troyberry.opengl.util.GLColorUtil;
 
+import main.PSGameSettings;
 import planet.Planet;
 import sphere.Sphere;
 import star.Star;
 
 public class Galaxy {
 	
-	private long diskHeight;
 	private World world;
 	String name;
 	private float size, starScale;
@@ -20,24 +20,29 @@ public class Galaxy {
 	private List<Sphere> spheres;
 	protected float currentRadius;
 	
-	public Galaxy(String name, int bands, int groupsPerBand, long bandLength, long diskHeight, int spheresPerGroup, 
-			World worldin, Vector3f galaxyPosition, Vector3f galaxyRotation, Vector3f galaxyVelocity) {
+	public Galaxy(String name, World worldin) {
 		
 		this.name = name;
-		this.diskHeight = diskHeight;
 		this.world = worldin;
 		this.spheres = new ArrayList<Sphere>();
+		
+	}
+	
+	public static void createStandardGalaxy (String name, int bands, int groupsPerBand, long bandLength, long diskHeight, int spheresPerGroup, 
+			World worldin, Vector3f galaxyPosition, Vector3f galaxyRotation, Vector3f galaxyVelocity) {
+		
+		Galaxy g = new Galaxy(name, worldin);
 		int slices = groupsPerBand;
 		float distance = 0;
 		double angleChange = 0;
 		float distanceFromLast = bandLength;
 		float LastGroupX = -1;
 		float LastGroupZ = -1;
-		this.size = bands * bandLength * groupsPerBand;
+		g.size = bands * bandLength * groupsPerBand;
 		double slice = Math.PI * 2 / slices;
-		this.starScale = (size / 150000.0f);
-		center = new BlackHole(new Vector3f(galaxyPosition), new Vector3f(galaxyVelocity), new Vector3f(50, 50, 50), 300 * starScale, (float)Math.pow(500 * starScale, 3.0));
-		world.addSphere(center);
+		g.starScale = (g.size / 150000.0f);
+		g.center = new BlackHole(new Vector3f(galaxyPosition), new Vector3f(galaxyVelocity), new Vector3f(5, 5, 5), 20 * g.starScale, (float)Math.pow(1500 * g.starScale, 3.0));
+		worldin.addSphere(g.center);
 		Matrix4f matrix = new Matrix4f();
 		matrix.rotate(galaxyRotation.x, new Vector3f(1, 0, 0));
 		matrix.rotate(galaxyRotation.y, new Vector3f(0, 1, 0));
@@ -45,7 +50,7 @@ public class Galaxy {
 		for(int inter = 0; inter < bands; inter++) {
 			for (int i = 0; i < slices; i++) {
 				//Generate group
-				double angle = i * slice + angleChange;
+				double angle = i * -slice + angleChange;
 				distance += bandLength;
 				float groupX  = Maths.sinFloat(angle) * distance;
 				float groupZ = Maths.cosFloat(angle) * distance;
@@ -57,21 +62,20 @@ public class Galaxy {
 					float thisDistance = Maths.randRange(0, distanceFromLast);
 					float x = Maths.sinFloat(thisAngle) * thisDistance;
 					float z = Maths.cosFloat(thisAngle) * thisDistance;
-					/**Sphere s = new Star(new Vector3f(groupX + x, Maths.randRange(-diskHeight, diskHeight), groupZ + z), new Vector3f(),
+					Sphere s = new Star(new Vector3f(groupX + x, Maths.randRange(-diskHeight, diskHeight), groupZ + z), new Vector3f(),
 							GLColorUtil.randomStarColor(25), Maths.randRange(10.0f, 50.0f), 
-							(float) Math.pow(Maths.randRange(5.0f, 30.0f) * starScale, 3.0));
-					*/
-					Planet s = new Planet(new Vector3f(groupX + x, Maths.randRange(-diskHeight, diskHeight), groupZ + z), new Vector3f(), new Vector3f(255, 255, 255), 1000, 200, 0.1f, 50.0f);
-					Vector2f vel = new Vector2f(s.position.x, s.position.z).rotate(85);
-					float distFromCenter = Maths.getDistanceBetweenPoints(galaxyPosition, s.position);
-					vel.setLength(distFromCenter / 4000 * starScale * starScale);
-					s.velocity.set(vel.x, 0, vel.y);
+							(float) Math.pow(Maths.randRange(5.0f, 30.0f) * g.starScale, 3.0));
+					double starDistance = Maths.getDistanceBetweenPoints(g.center.position.x, g.center.position.y, g.center.position.z, s.position.x, s.position.y, s.position.z);
+					Vector3f vecBetween = Vector3f.subtract(g.center.position, s.position);
+					vecBetween.setLength((float)(Math.pow(PSGameSettings.GRAVITY_CONSTANT * g.center.mass / starDistance, 0.5) * 0.60));
+					vecBetween.rotate(new Vector3f(0, 1, 0), (float)Math.toRadians(90));
+					s.velocity.set(vecBetween);
 					s.velocity = s.velocity.mul(matrix);
 					s.position = s.position.mul(matrix);
 					s.position.add(galaxyPosition);
 					s.velocity.add(galaxyVelocity);
-					world.addSphere(s);
-					spheres.add(s);
+					worldin.addSphere(s);
+					g.spheres.add(s);
 				}
 				LastGroupX = groupX;
 				LastGroupZ = groupZ;
@@ -81,7 +85,7 @@ public class Galaxy {
 			distance = 0;
 			angleChange += Math.PI / (bands / 2.0);
 		}
-		worldin.addGalaxy(this);
+		worldin.addGalaxy(g);
 	}
 
 	public List<Sphere> getSpheres() {

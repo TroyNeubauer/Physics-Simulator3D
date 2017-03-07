@@ -9,14 +9,14 @@ import renderEngine.MasterRenderer;
 
 public class FreeCamera extends ICamera {
 	
-	private SmoothFloat speed = new SmoothFloat(100f, 10);
+	private SmoothFloat speed = new SmoothFloat(10000f, 10);
 	
 	public FreeCamera() {
 		super(MasterRenderer.NEAR_PLANE);
 	}
 
 	@Override
-	public void moveRotation() {
+	public void onMouseMove() {
 		pitch += Mouse.getDY() / 10.0f;
 		yaw   += Mouse.getDX() / 10.0f;
 		
@@ -26,7 +26,7 @@ public class FreeCamera extends ICamera {
 	}
 	
 	@Override
-	public void moveOther() {
+	public void move() {
 		if(Controls.BANK_LEFT.isPressedUpdateThread())roll += 3;
 		if(Controls.BANK_RIGHT.isPressedUpdateThread())roll -= 3;
 		float dx = (float) (Math.cos(Math.toRadians(yaw - 90)));
@@ -44,7 +44,7 @@ public class FreeCamera extends ICamera {
 		this.position.add(temp.scale(Window.getFrameTimeSeconds()));
 		speed.update(Window.getFrameTimeSeconds());
 		speed.setTarget(speed.getTarget() + speed.getTarget() * (Mouse.getDWheel() * 3) * Window.getFrameTimeSeconds());
-		speed.clamp(0.000005f, 999999f);
+		speed.clamp(0.0000005f, 2500000f);
 		updateViewMatrix();
 	}
 
