@@ -5,15 +5,15 @@ kernel void gravity(global float4* prePos, global float4* postPos, global float4
 	if(itemId < size) {
 		float4 pos = postPos[itemId];
 		float4 vel = velocities[itemId];
-				
+		float radius = cbrt(mass);
 		float4 otherPos, deltaVel;
 		float gravity, dist, distSquared;
 		for(int i = 0; i < size; i++) {
-			
 				otherPos = postPos[i];
 				deltaVel = (float4) (otherPos.x - pos.x, otherPos.y - pos.y, otherPos.z - pos.z, 0.0f);
 				distSquared = pow(deltaVel.x, 2.0f) + pow(deltaVel.y, 2.0f) + pow(deltaVel.z, 2.0f);
 				dist = sqrt(distSquared);
+				
 				gravity = (mass * mass) / distSquared;
 				
 				deltaVel /= dist;
@@ -21,7 +21,9 @@ kernel void gravity(global float4* prePos, global float4* postPos, global float4
 				deltaVel *= gravity;
 				
 				if(i != itemId) {
-					vel += deltaVel;
+					if((2.0f * radius) < dist){
+						vel += deltaVel;
+					}
 				}
 			
 		}

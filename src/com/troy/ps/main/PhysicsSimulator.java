@@ -33,7 +33,7 @@ public class PhysicsSimulator implements Runnable {
 	public void startGame() throws Exception {
 		GLUtil.init();
 		VersionManager.setVersion(new Version());
-		window = new Window(1440, 810);
+		window = new Window();
 		
 		window.setClearColor(0, 0, 0);
 		OpenCLManager.create();

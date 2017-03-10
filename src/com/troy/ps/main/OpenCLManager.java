@@ -17,14 +17,15 @@ import com.troyberry.util.data.*;
 public class OpenCLManager {
 
 	private static CLDevice device;
-	public static final int MAX_PARTICLES = 1000;
-	public static final double GRAVITY_UPS = 2.0;
+	public static final int MAX_PARTICLES = 800;
+	public static final double GRAVITY_UPS = 30.0;
 	private static final long TIME_PER_TICK = (long) (1000000000.0 / GRAVITY_UPS);
 	private static long nextUpdate = -1, startTime = -1;
 
 	private static CLMem pos, color, vel, prePos, postPos;
 	private static CLKernel gravityKernel, initKernel, lerpKernel;
 	private static CLProgram program;
+	private static float mass = 10;
 
 	public static void create() {
 		if (Options.showOpenCLInfo) System.out.println("Open CL Info:");
@@ -92,7 +93,7 @@ public class OpenCLManager {
 		gravityKernel.setArg(index++, color);
 		gravityKernel.setArg(index++, MAX_PARTICLES);
 		gravityKernel.setArg(index++, 0.1f);
-		gravityKernel.setArg(index++, 2.0f);
+		gravityKernel.setArg(index++, mass);
 		System.out.println(Timer.getString(gravityKernel.runWithTime(MAX_PARTICLES)));
 	}
 
