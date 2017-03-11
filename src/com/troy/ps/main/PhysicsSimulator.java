@@ -8,8 +8,10 @@ import java.util.*;
 import com.troy.ps.gamestate.*;
 import com.troy.ps.glRequestProcessing.GlRequestProcessor;
 import com.troy.ps.resourceProcessing.*;
+import com.troyberry.graphics.*;
 import com.troyberry.logging.*;
 import com.troyberry.math.*;
+import com.troyberry.opengl.input.*;
 import com.troyberry.opengl.resources.*;
 import com.troyberry.opengl.util.*;
 import com.troyberry.util.*;
@@ -33,12 +35,14 @@ public class PhysicsSimulator implements Runnable {
 	public void startGame() throws Exception {
 		GLUtil.init();
 		VersionManager.setVersion(new Version());
-		window = new Window();
+		window = new Window(ResolutionUtil.getscaledResolution(0.9));
 		
 		window.setClearColor(0, 0, 0);
 		OpenCLManager.create();
 		GameStateManager.update();
 		OpenCLManager.forceUpdate();
+		Keyboard.init(window);
+		Mouse.init(window);
 	}
 
 	@Override

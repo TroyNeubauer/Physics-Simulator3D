@@ -32,7 +32,7 @@ public class PointRenderer {
 		this.shader.start();
 		shader.pointSize.loadFloat(Options.pointSize);
 		shader.projectionMatrix.loadMatrix(projectionMatrix);
-		GLUtil.enableAdditiveBlending();
+		GLUtil.enableAlphaBlending();
 		GLUtil.disableDepthWriting();
 		GLUtil.disableDepthTesting();
 		GLUtil.cullBackFaces(false);
