@@ -1,12 +1,14 @@
 package com.troy.ps.gamestate;
 
+import com.troyberry.opengl.util.*;
+
 public interface GameState {
 	
-	public void init();
+	public void init(Window window);
 	
-	public void render();
+	public void render(Window window);
 	
-	public void update();
+	public void update(Window window);
 	
 	public void cleanUp();
 }

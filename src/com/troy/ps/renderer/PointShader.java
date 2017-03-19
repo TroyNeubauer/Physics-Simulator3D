@@ -8,10 +8,10 @@ public class PointShader extends ShaderProgram {
 	private static final MyFile FRAGMENT_SHADER = new MyFile("com/troy/ps/renderer", "point.frag");
 	
 	protected UniformMatrix projectionMatrix = new UniformMatrix("projection_matrix");
-	protected UniformFloat pointSize = new UniformFloat("pointSize");
+	protected UniformMatrix viewMatrix = new UniformMatrix("view_matrix");
 
 	public PointShader() {
-		super(VERTEX_SHADER, FRAGMENT_SHADER, "position", "color");
-		super.storeAllUniformLocations(projectionMatrix, pointSize);
+		super(VERTEX_SHADER, FRAGMENT_SHADER, "position", "offset", "color", "radius");
+		super.storeAllUniformLocations(projectionMatrix, viewMatrix);
 	}
 }

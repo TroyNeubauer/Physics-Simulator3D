@@ -1,31 +1,37 @@
-kernel void gravity(global float4* prePos, global float4* postPos, global float4* velocities, 
-	global float4* colors, const int size, const float add, float mass) {
-	
+struct Body {
+	float4 prePosition;
+	float4 velocity;
+	float mass;
+	float radius;
+};
+
+kernel void gravity(global float4* prePos, global float4* postPos, global float4* velocities, global float4* colors, global float* radii, 
+const int size, const float add, float mass) {
+
 	const int itemId = get_global_id(0);
 	if(itemId < size) {
 		float4 pos = postPos[itemId];
 		float4 vel = velocities[itemId];
-		float radius = cbrt(mass);
+		float radius = radii[itemId];
 		float4 otherPos, deltaVel;
 		float gravity, dist, distSquared;
 		for(int i = 0; i < size; i++) {
-				otherPos = postPos[i];
-				deltaVel = (float4) (otherPos.x - pos.x, otherPos.y - pos.y, otherPos.z - pos.z, 0.0f);
-				distSquared = pow(deltaVel.x, 2.0f) + pow(deltaVel.y, 2.0f) + pow(deltaVel.z, 2.0f);
-				dist = sqrt(distSquared);
+			otherPos = postPos[i];
+			deltaVel = (float4) (otherPos.x - pos.x, otherPos.y - pos.y, otherPos.z - pos.z, 0.0f);
+			distSquared = pow(deltaVel.x, 2.0f) + pow(deltaVel.y, 2.0f) + pow(deltaVel.z, 2.0f);
+			dist = sqrt(distSquared);
 				
-				gravity = (mass * mass) / distSquared;
+			gravity = (mass * mass) / distSquared;
 				
-				deltaVel /= dist;
+			deltaVel /= dist;
 				
-				deltaVel *= gravity;
+			deltaVel *= gravity;
 				
-				if(i != itemId) {
-					if((2.0f * radius) < dist){
-						vel += deltaVel;
-					}
+			if(i != itemId) {
+				if((radius + radii[i]) < dist) {
+					vel += deltaVel;
 				}
-			
+			}
 		}
 		prePos[itemId] = pos;
 		postPos[itemId] = pos + vel * add;

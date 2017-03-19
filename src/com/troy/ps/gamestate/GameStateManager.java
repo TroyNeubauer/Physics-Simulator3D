@@ -1,6 +1,7 @@
 package com.troy.ps.gamestate;
 
 import com.troy.ps.main.*;
+import com.troyberry.opengl.util.*;
 
 public class GameStateManager {
 
@@ -27,12 +28,12 @@ public class GameStateManager {
 			nextGameState = null;
 		}
 	}
-	
+
 	/**
 	 * Gets the current game state
 	 * @return The current game state
 	 */
-	public static GameState getState(){
+	public static GameState getState() {
 		return currentGameState;
 	}
 
@@ -44,37 +45,44 @@ public class GameStateManager {
 	public static void suggestState(GameState state) {
 		suggestedGameState = state;
 	}
-	
+
 	/**
 	 * Renders the current game state
 	 */
-	public static void render() {
-		if(currentGameState != null) currentGameState.render();
+	public static void render(Window window) {
+		if (currentGameState != null) currentGameState.render(window);
 	}
 
 	/**
-	 * Updates the current game state if a new one has been suggested or set. Then calls the update method for the current game state
+	 * Changes the current game state if a new one has been suggested or set
 	 */
-	public static void update() {
+	public static void checkForChanges(Window window) {
 		if (nextGameState == null) {
 			nextGameState = suggestedGameState;
 		}
 		suggestedGameState = null;
 		if (nextGameState != currentGameState) {
-			changeState(nextGameState);
-		}
-		if(currentGameState != null) currentGameState.update();
-	}
-
-	private static void changeState(GameState state) {
-		if(currentGameState != null)currentGameState.cleanUp();
-		currentGameState = state;
-		nextGameState = state;
-		if (currentGameState != null) {
-			currentGameState.init();
+			changeState(window, nextGameState);
 		}
 	}
 	
+	/**
+	 * Updates the current gamestate
+	 * @param window The current window
+	 */
+	public static void update(Window window) {
+		if (currentGameState != null) currentGameState.update(window);
+	}
+
+	private static void changeState(Window window, GameState state) {
+		if (currentGameState != null) currentGameState.cleanUp();
+		currentGameState = state;
+		nextGameState = state;
+		if (currentGameState != null) {
+			currentGameState.init(window);
+		}
+	}
+
 	private GameStateManager() {
 	}
 
@@ -82,7 +90,7 @@ public class GameStateManager {
 	 * Cleans up the current game state
 	 */
 	public static void cleanUp() {
-		if(currentGameState != null)currentGameState.cleanUp();
+		if (currentGameState != null) currentGameState.cleanUp();
 	}
 
 }

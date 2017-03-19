@@ -1,33 +1,40 @@
 package com.troy.ps.main;
 
 import com.troy.ps.gamestate.*;
+import com.troy.ps.renderer.*;
 import com.troy.ps.world.*;
+import com.troyberry.opengl.input.*;
 import com.troyberry.opengl.util.*;
 
 public class GameManager implements GameState {
 
 	private MasterRenderer renderer;
-	private EngineMaster engine;
 	private World world;
+	private ICamera camera;
 	
-	public void init() {
-		renderer = new MasterRenderer(Window.getInstance());
-		engine = new EngineMaster();
+	public void init(Window window) {
+		OpenCLManager.create();
+		Mouse.setGrabbed(true);
+		renderer = new MasterRenderer(window);
 		world = new World();
+		camera = new FreeCamera(0.0001f);
+		Mouse.setCamera(camera);
+		OpenCLManager.forceUpdate();
+
 	}
 	
-	public void update() {
-		engine.update(world);
+	public void update(Window window) {
+		camera.move();
 	}
 
-	public void render() {
-		renderer.render(world);
+	public void render(Window window) {
+		OpenCLManager.update();
+		renderer.render(camera, window, world);
 	}
 
 	@Override
 	public void cleanUp() {
 		renderer.cleanUp();
-		engine.cleanUp();
 	}
 
 }

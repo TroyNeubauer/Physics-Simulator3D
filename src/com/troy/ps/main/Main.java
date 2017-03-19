@@ -1,11 +1,6 @@
 package com.troy.ps.main;
 
-import com.troyberry.color.*;
-import com.troyberry.logging.*;
-import com.troyberry.math.*;
-import com.troyberry.util.Interpolation.*;
-import com.troyberry.util.Interpolation.KeyFrameMaster.*;
-import com.troyberry.util.data.*;
+import java.io.*;
 
 public class Main {
 	

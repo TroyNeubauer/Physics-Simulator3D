@@ -1,14 +1,14 @@
 package com.troy.ps.main;
 
-
 import java.io.*;
 import java.text.*;
 import java.util.*;
 
+import javax.swing.plaf.*;
+
 import com.troy.ps.gamestate.*;
 import com.troy.ps.glRequestProcessing.GlRequestProcessor;
 import com.troy.ps.resourceProcessing.*;
-import com.troyberry.graphics.*;
 import com.troyberry.logging.*;
 import com.troyberry.math.*;
 import com.troyberry.opengl.input.*;
@@ -17,6 +17,10 @@ import com.troyberry.opengl.util.*;
 import com.troyberry.util.*;
 
 public class PhysicsSimulator implements Runnable {
+
+	public static final boolean DEBUG = true;
+	public static final boolean DISABLE_CRASH_REPORTS = DEBUG;
+
 	/** A 10MiB preallocation to ensure the heap is reasonably sized. */
 	public static byte[] memoryReserve = new byte[Maths.pow(2, 10) * Maths.pow(2, 10) * 10];
 
@@ -35,27 +39,29 @@ public class PhysicsSimulator implements Runnable {
 	public void startGame() throws Exception {
 		GLUtil.init();
 		VersionManager.setVersion(new Version());
-		window = new Window(ResolutionUtil.getscaledResolution(0.9));
-		
+		window = new Window();
 		window.setClearColor(0, 0, 0);
-		OpenCLManager.create();
-		GameStateManager.update();
-		OpenCLManager.forceUpdate();
-		Keyboard.init(window);
+		
 		Mouse.init(window);
+		Keyboard.init(window);
+
+		
+		GameStateManager.checkForChanges(window);
+		
+		Updater.init(window);
 	}
 
 	@Override
 	public void run() {
 
 		this.running = true;
-		CrashReport crashreport;
 
 		try {
 			this.startGame();
 		} catch (Throwable throwable) {
-			crashreport = new CrashReport("Initializing game", throwable);
-			this.displayCrashReport(crashreport);
+			this.crashReport = new CrashReport("Initializing game", throwable);
+			this.displayCrashReport(crashReport);
+
 			return;
 		}
 
@@ -67,7 +73,7 @@ public class PhysicsSimulator implements Runnable {
 					} catch (OutOfMemoryError e) {
 						this.freeMemory();
 						Log.error("Out of memory!!!\n" + e);
-						//TODO: show out of memory screen 
+						//TODO: show out of memory screen
 						System.gc();
 					}
 					if (window.isCloseRequested()) break;
@@ -78,10 +84,9 @@ public class PhysicsSimulator implements Runnable {
 				return;
 			}
 		} catch (Throwable t) {
-			crashreport = new CrashReport("Unexpected error", t);
 			this.freeMemory();
-			Log.fatal("Unreported exception thrown!\n" + t);
-			this.displayCrashReport(crashreport);
+			Log.fatal("Unreported exception thrown!\n");
+			this.displayCrashReport(new CrashReport("Unexpected error", t));
 		} finally {
 			close();
 		}
@@ -89,17 +94,27 @@ public class PhysicsSimulator implements Runnable {
 	}
 
 	private void runGameLoop() {
-		OpenCLManager.update();
-		GameStateManager.update();
-		GameStateManager.render();
+		GameStateManager.checkForChanges(window);
+		GameStateManager.render(window);
 		window.update();
 		GlRequestProcessor.dealWithTopRequests();
 	}
 
-	public void displayCrashReport(CrashReport report) {
-		File crashReportFolder = new File("./crash-reports");
-		File reportFile = new File(crashReportFolder, "crash-" + (new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")).format(new Date()));
-		report.print();
+	public void displayCrashReport(CrashReport crashReport) {
+		String crash = crashReport.getCompleteReport();
+		if (!DISABLE_CRASH_REPORTS) {
+			try {
+				File crashReportFolder = new File(System.getProperty("user.dir"), "Crash Reports");
+				File reportFile = new File(crashReportFolder, "crash-" + (new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")).format(new Date()) + ".txt");
+				crashReportFolder.mkdirs();
+				reportFile.createNewFile();
+				BufferedWriter writer = new BufferedWriter(new FileWriter(reportFile));
+				writer.write(crash);
+				writer.close();
+			} catch (Exception ignore) {
+			}
+		}
+		System.err.println(crash);
 	}
 
 	public void freeMemory() {
@@ -118,6 +133,7 @@ public class PhysicsSimulator implements Runnable {
 		GameStateManager.cleanUp();
 		GlRequestProcessor.completeAllRequests();
 		ResourceProcessor.cleanUp();
+		Updater.cleanUp();
 		window.destroy();
 	}
 
@@ -126,4 +142,3 @@ public class PhysicsSimulator implements Runnable {
 	}
 
 }
-
