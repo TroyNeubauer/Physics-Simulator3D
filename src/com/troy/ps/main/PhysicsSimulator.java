@@ -4,15 +4,12 @@ import java.io.*;
 import java.text.*;
 import java.util.*;
 
-import javax.swing.plaf.*;
-
 import com.troy.ps.gamestate.*;
-import com.troy.ps.glRequestProcessing.GlRequestProcessor;
+import com.troy.ps.glRequestProcessing.*;
 import com.troy.ps.resourceProcessing.*;
 import com.troyberry.logging.*;
 import com.troyberry.math.*;
 import com.troyberry.opengl.input.*;
-import com.troyberry.opengl.resources.*;
 import com.troyberry.opengl.util.*;
 import com.troyberry.util.*;
 
@@ -21,8 +18,8 @@ public class PhysicsSimulator implements Runnable {
 	public static final boolean DEBUG = true;
 	public static final boolean DISABLE_CRASH_REPORTS = DEBUG;
 
-	/** A 10MiB preallocation to ensure the heap is reasonably sized. */
-	public static byte[] memoryReserve = new byte[Maths.pow(2, 10) * Maths.pow(2, 10) * 10];
+	/** A 100MiB preallocation to ensure the heap is reasonably sized. */
+	public static byte[] memoryReserve = new byte[Maths.pow(2, 10) * Maths.pow(2, 10) * 100];
 
 	private Window window;
 	private boolean running;
@@ -30,17 +27,18 @@ public class PhysicsSimulator implements Runnable {
 	private CrashReport crashReport;
 
 	public PhysicsSimulator(String[] args) {
-
+		
 	}
 
 	/**
 	 * Starts the game: initializes the canvas, the title, the settings, etc.
 	 */
 	public void startGame() throws Exception {
-		GLUtil.init();
 		VersionManager.setVersion(new Version());
+		GLUtil.init();
 		window = new Window();
 		window.setClearColor(0, 0, 0);
+		window.show();
 		
 		Mouse.init(window);
 		Keyboard.init(window);
@@ -71,10 +69,11 @@ public class PhysicsSimulator implements Runnable {
 					try {
 						this.runGameLoop();
 					} catch (OutOfMemoryError e) {
-						this.freeMemory();
-						Log.error("Out of memory!!!\n" + e);
+						freeMemory();
+						Log.error("Out of memory!!!\n Try running with the VM arg \"-Xss1G\" \n");
+						e.printStackTrace();
 						//TODO: show out of memory screen
-						System.gc();
+						System.exit(1);
 					}
 					if (window.isCloseRequested()) break;
 					continue;
@@ -96,7 +95,6 @@ public class PhysicsSimulator implements Runnable {
 	private void runGameLoop() {
 		GameStateManager.checkForChanges(window);
 		GameStateManager.render(window);
-		window.update();
 		GlRequestProcessor.dealWithTopRequests();
 	}
 

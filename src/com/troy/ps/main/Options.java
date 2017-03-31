@@ -3,10 +3,8 @@ package com.troy.ps.main;
 public class Options {
 	
 	public static boolean showOpenCLInfo = false;
-	
-	public static float pointSize = 3.0f;
-	
-	private static float mouseScaleX = 0.0f, mouseScaleY = 0.0f, globalMouseScale = 0.1f;
+		
+	private static float mouseScaleX = 0.1f, mouseScaleY = 0.1f, globalMouseScale = 0.1f;
 	private  static boolean enableIndividualAxisScrolling = false;
 	
 	public static float getMouseXScale() {

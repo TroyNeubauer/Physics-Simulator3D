@@ -15,7 +15,7 @@ public class MasterRenderer {
 	public MasterRenderer(Window window) {
 		
 		pointRenderer = new PointRenderer();
-		multiSampleFbo = new Fbo(Window.getInstance().getWidth(), Window.getInstance().getHeight(), new Integer(4));
+		multiSampleFbo = new Fbo(Window.getInstance().getWidth(), Window.getInstance().getHeight(), new Integer(8));
 		outputFbo = new Fbo(Window.getInstance().getWidth(), Window.getInstance().getHeight(), Fbo.DEPTH_RENDER_BUFFER);
 	}
 

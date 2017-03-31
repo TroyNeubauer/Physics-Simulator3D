@@ -19,8 +19,8 @@ public class OpenCLManager {
 
 	private static CLDevice device;
 	private static CLPlatform platform;
-	public static final int MAX_PARTICLES = 2000;
-	public static final double GRAVITY_UPS = 5.0;
+	public static final int MAX_PARTICLES = 1000;
+	public static final double GRAVITY_UPS = 7.0;
 	private static final long TIME_PER_TICK = (long) (1000000000.0 / GRAVITY_UPS);
 	private static long nextUpdate = -1, startTime = -1;
 
@@ -35,7 +35,7 @@ public class OpenCLManager {
 		platform = ps.get(0);
 		device = platform.getDevices(CL_DEVICE_TYPE_ALL).get(0);
 		if (Options.showOpenCLInfo) System.out.println("Using device:" + device.toString());
-		
+
 		try {
 			program = new CLProgram(device, new MyFile("/test.cl"), new File(new File("").getAbsolutePath(), "\\kernels\\"), true);
 		} catch (CLProgramBuildException | IOException e) {
@@ -69,22 +69,27 @@ public class OpenCLManager {
 		pos = device.getFromGLBuffer(CL_MEM_READ_WRITE, posVbo);
 		color = device.getFromGLBuffer(CL_MEM_READ_WRITE, colorVbo);
 		radius = device.getFromGLBuffer(CL_MEM_READ_ONLY, radiusVbo);
-		
+
 		vel = device.allocateMemory(MyBufferUtils.createFloatBuffer(velocities));
-		
+
 		prePos = device.allocateMemory(MAX_PARTICLES * Float.SIZE);
 		postPos = device.allocateMemory(MAX_PARTICLES * Float.SIZE);
 	}
 
 	public static void update() {
 		if (nextUpdate == -1) nextUpdate = System.nanoTime();
+		device.acquireGLObjects(pos, color, radius);
+		int count = 0;
 		while (System.nanoTime() > nextUpdate) {
 			nextUpdate += TIME_PER_TICK;
 			gravity();
 			startTime = System.nanoTime();
+			count++;
+			if (count > 25) break;
 		}
 		float value = Maths.normalize(startTime, nextUpdate, System.nanoTime());
 		lerp(value);
+		device.releaseGLObjects(pos, color, radius);
 	}
 
 	public static void forceUpdate() {

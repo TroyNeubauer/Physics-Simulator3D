@@ -88,7 +88,7 @@ public class World {
 		}
 		
 		
-		vao = SphereGenerator.generateSphere(1);
+		vao = SphereGenerator.generateSphere(2);
 		vao.bind();
 		Vbo posVbo = vao.createAttribute(1, initPos, 4, true);
 		Vbo colorVbo = vao.createAttribute(2, initColor, 4, true);

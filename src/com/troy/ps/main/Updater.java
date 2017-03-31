@@ -28,7 +28,7 @@ public class Updater extends Thread {
 	}
 
 	private void update(Window window) {
-		GameStateManager.update(window);
+		GameStateManager.update(window, 1.0 / UPDATES_PER_SECOND);
 		
 		if (updateTimer >= 1000000000) {
 			if (updates * 1.05 < (double) UPDATES_PER_SECOND) System.out.println("5% behind on update " + updates + "/" + UPDATES_PER_SECOND);
