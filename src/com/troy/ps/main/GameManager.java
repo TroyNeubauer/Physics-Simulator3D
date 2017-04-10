@@ -17,7 +17,7 @@ public class GameManager implements GameState {
 		Mouse.setGrabbed(true);
 		renderer = new MasterRenderer(window);
 		world = new World();
-		camera = new FreeCamera(70);
+		camera = new FreeCamera(window, 70);
 		OpenCLManager.forceUpdate();
 		Mouse.addMouseMotionCallback(() -> {
 			camera.onMouseMove();

@@ -5,8 +5,6 @@ import static org.lwjgl.opencl.CL10.*;
 import java.io.*;
 import java.util.*;
 
-import org.lwjgl.opencl.*;
-
 import com.troy.ps.world.*;
 import com.troyberry.logging.Timer;
 import com.troyberry.math.*;
@@ -20,14 +18,14 @@ public class OpenCLManager {
 	private static CLDevice device;
 	private static CLPlatform platform;
 	public static final int MAX_PARTICLES = 1000;
-	public static final double GRAVITY_UPS = 7.0;
+	public static final double GRAVITY_UPS = 30.0;
 	private static final long TIME_PER_TICK = (long) (1000000000.0 / GRAVITY_UPS);
 	private static long nextUpdate = -1, startTime = -1;
 
 	private static CLMem pos, color, vel, prePos, postPos, radius;
 	private static CLKernel gravityKernel, initKernel, lerpKernel;
 	private static CLProgram program;
-	private static float mass = 10;
+	private static float mass = 20;
 
 	public static void create() {
 		if (Options.showOpenCLInfo) System.out.println("Open CL Info:");
@@ -70,10 +68,10 @@ public class OpenCLManager {
 		color = device.getFromGLBuffer(CL_MEM_READ_WRITE, colorVbo);
 		radius = device.getFromGLBuffer(CL_MEM_READ_ONLY, radiusVbo);
 
-		vel = device.allocateMemory(MyBufferUtils.createFloatBuffer(velocities));
+		vel = device.allocateMemory(TroyBufferUtils.createFloatBuffer(velocities));
 
-		prePos = device.allocateMemory(MAX_PARTICLES * Float.SIZE);
-		postPos = device.allocateMemory(MAX_PARTICLES * Float.SIZE);
+		prePos = device.allocateMemory(MAX_PARTICLES * Float.BYTES);
+		postPos = device.allocateMemory(MAX_PARTICLES * Float.BYTES);
 	}
 
 	public static void update() {

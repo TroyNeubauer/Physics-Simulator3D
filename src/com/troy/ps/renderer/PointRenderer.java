@@ -2,12 +2,8 @@ package com.troy.ps.renderer;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL31.*;
-import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.opengl.GL33.*;
-import static org.lwjgl.opengl.GL32.*;
 
 import com.troy.ps.main.*;
-import com.troyberry.math.*;
 import com.troyberry.opengl.mesh.*;
 import com.troyberry.opengl.util.*;
 
@@ -31,7 +27,7 @@ public class PointRenderer {
 		this.shader.start();
 		shader.projectionMatrix.loadMatrix(camera.getProjectionMatrix());
 		shader.viewMatrix.loadMatrix(camera.getViewMatrix());
-		GLUtil.enableAdditiveBlending();
+		GLUtil.enableAlphaBlending();
 		GLUtil.disableDepthWriting();
 		GLUtil.disableDepthTesting();
 		GLUtil.cullBackFaces(false);

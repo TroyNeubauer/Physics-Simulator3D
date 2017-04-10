@@ -8,25 +8,25 @@ import com.troyberry.opengl.util.*;
 public class FreeCamera implements ICamera {
 
 	private static float speed = 10;
-	private float pitch, yaw, near, far;
+	private float pitch, yaw, roll, near, far;
 	private Vector3f position;
-	private Matrix4f projectionMatrix, viewMatrix;
+	private Matrix4f projectionMatrix, viewMatrix, rotationMatrix;
 	private float fov;
 
-	public FreeCamera(float fov) {
+	public FreeCamera(Window window, float fov) {
 		this.pitch = 0;
 		this.yaw = 0;
+		this.roll = 0;
 		this.fov = fov;
-		this.position = new Vector3f();
+		this.position = new Vector3f(0, 100, -100);
 
 		this.near = 0.01f;
 		this.far = 100000f;
-		updateProjectionMatrix();
+		updateProjectionMatrix(window);
 		updateViewMatrix();
 	}
 
 	private Vector3f checkInputs() {
-
 		speed += Mouse.getDWheel() / 10.0f;
 		speed = Maths.clamp(0.001f, 1000f, speed);
 		Vector3f forward = getForwardVector();
@@ -47,19 +47,28 @@ public class FreeCamera implements ICamera {
 
 		if (!total.equals(Vector3f.ZERO)) {
 			total.setLength(speed);
-			updateViewMatrix();
 		}
+		updateViewMatrix();
 		return total;
 	}
 
 	@Override
-	public void updateProjectionMatrix() {
-		this.projectionMatrix = GLMaths.createPerspectiveProjectionMatrix(Window.getInstance().getWidth(), Window.getInstance().getHeight(), near, far, fov);
+	public void updateProjectionMatrix(Window window) {
+		this.projectionMatrix = GLMaths.createPerspectiveProjectionMatrix(window.getWidth(), window.getHeight(), near, far, fov);
+	}
+
+	@Override
+	public void onMouseMove() {
+		float x = Mouse.getDX() * Options.getMouseXScale();
+		float y = Mouse.getDY() * Options.getMouseYScale();
+		this.yaw += x;
+		this.pitch += y;
+		updateViewMatrix();
 	}
 
 	@Override
 	public void updateViewMatrix() {
-		this.viewMatrix = GLMaths.createViewMatrix(position, pitch, yaw, 0);
+		this.viewMatrix = GLMaths.createViewMatrix(position, pitch, yaw);
 	}
 
 	@Override
@@ -167,15 +176,6 @@ public class FreeCamera implements ICamera {
 	@Override
 	public void move(float delta) {
 		this.position.add(checkInputs());
-	}
-
-	@Override
-	public void onMouseMove() {
-		float x = Mouse.getDX() * Options.getMouseXScale();
-		float y = Mouse.getDY() * Options.getMouseYScale();
-		this.pitch += y;
-		this.yaw += x;
-		updateViewMatrix();
 	}
 
 }

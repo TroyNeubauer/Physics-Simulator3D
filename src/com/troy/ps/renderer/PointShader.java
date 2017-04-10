@@ -1,7 +1,7 @@
 package com.troy.ps.renderer;
 
 import com.troyberry.opengl.shader.*;
-import com.troyberry.util.data.MyFile;
+import com.troyberry.util.data.*;
 
 public class PointShader extends ShaderProgram {
 	private static final MyFile VERTEX_SHADER = new MyFile("com/troy/ps/renderer", "point.vert");

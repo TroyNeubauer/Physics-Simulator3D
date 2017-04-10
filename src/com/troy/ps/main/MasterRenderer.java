@@ -2,8 +2,6 @@ package com.troy.ps.main;
 
 import com.troy.ps.renderer.*;
 import com.troy.ps.world.*;
-import com.troyberry.math.*;
-import com.troyberry.opengl.input.*;
 import com.troyberry.opengl.util.*;
 
 public class MasterRenderer {

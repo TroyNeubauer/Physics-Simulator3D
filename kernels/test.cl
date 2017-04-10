@@ -28,7 +28,7 @@ const int size, const float add, float mass) {
 			deltaVel *= gravity;
 				
 			if(i != itemId) {
-				if((radius + radii[i]) < dist) {
+				if((radius + radii[i]) * 10 < dist) {
 					vel += deltaVel;
 				}
 			}

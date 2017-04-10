@@ -6,11 +6,11 @@ import java.util.*;
 
 import com.troy.ps.gamestate.*;
 import com.troy.ps.glRequestProcessing.*;
-import com.troy.ps.resourceProcessing.*;
 import com.troyberry.logging.*;
 import com.troyberry.math.*;
 import com.troyberry.opengl.input.*;
 import com.troyberry.opengl.util.*;
+import com.troyberry.resources.*;
 import com.troyberry.util.*;
 
 public class PhysicsSimulator implements Runnable {
@@ -19,15 +19,14 @@ public class PhysicsSimulator implements Runnable {
 	public static final boolean DISABLE_CRASH_REPORTS = DEBUG;
 
 	/** A 100MiB preallocation to ensure the heap is reasonably sized. */
-	public static byte[] memoryReserve = new byte[Maths.pow(2, 10) * Maths.pow(2, 10) * 100];
-
+	public static byte[] memoryReserve = new byte[Maths.pow(Maths.pow(2, 10), 2) * 100];
+	
 	private Window window;
 	private boolean running;
 	private boolean hasCrashed;
 	private CrashReport crashReport;
 
 	public PhysicsSimulator(String[] args) {
-		
 	}
 
 	/**
@@ -39,6 +38,7 @@ public class PhysicsSimulator implements Runnable {
 		window = new Window();
 		window.setClearColor(0, 0, 0);
 		window.show();
+		window.enableFPSInTitle();
 		
 		Mouse.init(window);
 		Keyboard.init(window);
@@ -68,6 +68,7 @@ public class PhysicsSimulator implements Runnable {
 				if (!this.hasCrashed || this.crashReport == null) {
 					try {
 						this.runGameLoop();
+						GLUtil.checkForErrors("Game Loop");
 					} catch (OutOfMemoryError e) {
 						freeMemory();
 						Log.error("Out of memory!!!\n Try running with the VM arg \"-Xss1G\" \n");
