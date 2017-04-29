@@ -1,6 +1,7 @@
 package com.troy.ps.renderer;
 
 import com.troyberry.opengl.shader.*;
+import com.troyberry.util.*;
 import com.troyberry.util.data.*;
 
 public class PointShader extends ShaderProgram {

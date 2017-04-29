@@ -3,8 +3,10 @@ package com.troy.ps.main;
 import static org.lwjgl.opencl.CL10.*;
 
 import java.io.*;
+import java.nio.*;
 import java.util.*;
 
+import com.troy.ps.cltypes.*;
 import com.troy.ps.world.*;
 import com.troyberry.logging.Timer;
 import com.troyberry.math.*;
@@ -17,13 +19,13 @@ public class OpenCLManager {
 
 	private static CLDevice device;
 	private static CLPlatform platform;
-	public static final int MAX_PARTICLES = 1000;
-	public static final double GRAVITY_UPS = 30.0;
+	public static final int MAX_PARTICLES = 1000, BODIES = 64;
+	public static final double GRAVITY_UPS = 3.0;
 	private static final long TIME_PER_TICK = (long) (1000000000.0 / GRAVITY_UPS);
 	private static long nextUpdate = -1, startTime = -1;
 
-	private static CLMem pos, color, vel, prePos, postPos, radius;
-	private static CLKernel gravityKernel, initKernel, lerpKernel;
+	private static CLMem pos, color, vel, prePos, postPos, radius, bodies;
+	private static CLKernel gravityKernel, initKernel, lerpKernel, printBodiesKernel, createBodiesKernel;
 	private static CLProgram program;
 	private static float mass = 20;
 
@@ -33,9 +35,11 @@ public class OpenCLManager {
 		platform = ps.get(0);
 		device = platform.getDevices(CL_DEVICE_TYPE_ALL).get(0);
 		if (Options.showOpenCLInfo) System.out.println("Using device:" + device.toString());
+		
+		//for(String s : device.getExtensions())System.out.println("Has Extension: " + s);
 
 		try {
-			program = new CLProgram(device, new MyFile("/test.cl"), new File(new File("").getAbsolutePath(), "\\kernels\\"), true);
+			program = new CLProgram(device, new MyFile("/test.cl"), new File(new File("").getAbsolutePath(), "\\kernels\\"), true, CLTypes.getTypes());
 		} catch (CLProgramBuildException | IOException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -44,6 +48,39 @@ public class OpenCLManager {
 		gravityKernel = program.getKernel("gravity");
 		initKernel = program.getKernel("init");
 		lerpKernel = program.getKernel("lerp");
+		printBodiesKernel = program.getKernel("printBodies");
+		createBodiesKernel = program.getKernel("createBodies");
+	}
+	
+	public static void printBodies(int offset, int count) {
+		printBodiesKernel.setArg(0, bodies);
+		printBodiesKernel.setArg(1, offset);
+		printBodiesKernel.setArg(2, count);
+		printBodiesKernel.run(count);
+	}
+	
+	public static void createBodies(int offset, int count, float[] prePos, float[] postPos, float[] mass, float[] radius) {
+		CLMem prePosMem = device.allocateMemory(TroyBufferUtils.createFloatBuffer(prePos));
+		CLMem postPosMem = device.allocateMemory(TroyBufferUtils.createFloatBuffer(postPos));
+		CLMem massMem = device.allocateMemory(TroyBufferUtils.createFloatBuffer(mass));
+		CLMem radiusMem = device.allocateMemory(TroyBufferUtils.createFloatBuffer(radius));
+		int index = 0;
+		
+		createBodiesKernel.setArg(index++, bodies);
+		createBodiesKernel.setArg(index++, offset);
+		createBodiesKernel.setArg(index++, count);
+		
+		createBodiesKernel.setArg(index++, prePosMem);
+		createBodiesKernel.setArg(index++, postPosMem);
+		createBodiesKernel.setArg(index++, massMem);
+		createBodiesKernel.setArg(index++, radiusMem);
+		
+		createBodiesKernel.run(count);
+		
+		prePosMem.free();
+		postPosMem.free();
+		massMem.free();
+		radiusMem.free();
 	}
 
 	public static void setWorld(World world) {
@@ -72,6 +109,8 @@ public class OpenCLManager {
 
 		prePos = device.allocateMemory(MAX_PARTICLES * Float.BYTES);
 		postPos = device.allocateMemory(MAX_PARTICLES * Float.BYTES);
+		
+		bodies = device.allocateMemory(CLTypes.BODY.getBytes() * OpenCLManager.BODIES);
 	}
 
 	public static void update() {
@@ -92,8 +131,7 @@ public class OpenCLManager {
 
 	public static void forceUpdate() {
 		gravity();
-		startTime = System.nanoTime();
-		nextUpdate = startTime + TIME_PER_TICK;
+		nextUpdate = System.nanoTime() + TIME_PER_TICK;
 	}
 
 	private static void gravity() {
@@ -116,15 +154,37 @@ public class OpenCLManager {
 		vel.free();
 		prePos.free();
 		postPos.free();
-		device.free();
+		bodies.free();
+		
+		program.free();
 
 		gravityKernel.free();
 		initKernel.free();
 		lerpKernel.free();
-		program.free();
+		printBodiesKernel.free();
+		createBodiesKernel.free();
+		
+		device.free();
 	}
 
 	private OpenCLManager() {
 	}
+	
+	/**
+			OpenCLManager.printBodies(0, OpenCLManager.BODIES);
+			float[] prePos = new float[OpenCLManager.BODIES * 4];
+			float[] postPos = new float[OpenCLManager.BODIES * 4];
+			float[] mass = new float[OpenCLManager.BODIES];
+			float[] radius = new float[OpenCLManager.BODIES];
+			for(int i = 0; i < prePos.length; i++) prePos[i] = 0.5f;
+			
+			for(int i = 0; i < mass.length; i++) mass[i] = i * i;
+			OpenCLManager.createBodies(0, OpenCLManager.BODIES, prePos, postPos, mass, radius);
+			System.out.println("\n\nAfter Change:\n");
+			OpenCLManager.printBodies(0, OpenCLManager.BODIES);
+		
+		}
+		loop++;
+	 */
 
 }

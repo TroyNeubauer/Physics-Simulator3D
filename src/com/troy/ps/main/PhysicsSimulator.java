@@ -4,10 +4,12 @@ import java.io.*;
 import java.text.*;
 import java.util.*;
 
+import com.troy.ps.cltypes.*;
 import com.troy.ps.gamestate.*;
 import com.troy.ps.glRequestProcessing.*;
 import com.troyberry.logging.*;
 import com.troyberry.math.*;
+import com.troyberry.opencl.*;
 import com.troyberry.opengl.input.*;
 import com.troyberry.opengl.util.*;
 import com.troyberry.resources.*;
@@ -19,7 +21,7 @@ public class PhysicsSimulator implements Runnable {
 	public static final boolean DISABLE_CRASH_REPORTS = DEBUG;
 
 	/** A 100MiB preallocation to ensure the heap is reasonably sized. */
-	public static byte[] memoryReserve = new byte[Maths.pow(Maths.pow(2, 10), 2) * 100];
+	public static byte[] memoryReserve = new byte[(int)BinarySize.MEGABYTE.getValue() * 100];
 	
 	private Window window;
 	private boolean running;
@@ -35,8 +37,8 @@ public class PhysicsSimulator implements Runnable {
 	public void startGame() throws Exception {
 		VersionManager.setVersion(new Version());
 		GLUtil.init();
-		window = new Window();
-		window.setClearColor(0, 0, 0);
+		window = new Window(1280, 720);
+		window.setClearColor(1, 1, 1);
 		window.show();
 		window.enableFPSInTitle();
 		
@@ -51,7 +53,6 @@ public class PhysicsSimulator implements Runnable {
 
 	@Override
 	public void run() {
-
 		this.running = true;
 
 		try {
@@ -93,9 +94,15 @@ public class PhysicsSimulator implements Runnable {
 
 	}
 
+	private int loop = 0;
+	
 	private void runGameLoop() {
+		
+		window.clear();
 		GameStateManager.checkForChanges(window);
 		GameStateManager.render(window);
+		window.update();
+		
 		GlRequestProcessor.dealWithTopRequests();
 	}
 

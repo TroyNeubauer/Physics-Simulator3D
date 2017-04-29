@@ -4,6 +4,7 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL31.*;
 
 import com.troy.ps.main.*;
+import com.troy.ps.world.*;
 import com.troyberry.opengl.mesh.*;
 import com.troyberry.opengl.util.*;
 
@@ -15,8 +16,9 @@ public class PointRenderer {
 		shader = new PointShader();
 	}
 
-	public void render(Vao vao, ICamera camera) {
+	public void render(World world, ICamera camera) {
 		prepare(camera);
+		Vao vao = world.getVao();
 		vao.bind(0, 1, 2, 3);
 		glDrawElementsInstanced(GL_TRIANGLES, vao.getIndexCount(), GL_UNSIGNED_INT, 0, OpenCLManager.MAX_PARTICLES);
 		vao.unbind(0, 1, 2, 3);

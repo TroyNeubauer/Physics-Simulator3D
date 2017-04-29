@@ -8,15 +8,14 @@ import com.troyberry.opengl.util.*;
 public class FreeCamera implements ICamera {
 
 	private static float speed = 10;
-	private float pitch, yaw, roll, near, far;
+	private float near, far;
 	private Vector3f position;
-	private Matrix4f projectionMatrix, viewMatrix, rotationMatrix;
+	private Vector3f forward, right, up;
+	
+	private Matrix4f projectionMatrix, viewMatrix;
 	private float fov;
 
 	public FreeCamera(Window window, float fov) {
-		this.pitch = 0;
-		this.yaw = 0;
-		this.roll = 0;
 		this.fov = fov;
 		this.position = new Vector3f(0, 100, -100);
 
@@ -61,14 +60,32 @@ public class FreeCamera implements ICamera {
 	public void onMouseMove() {
 		float x = Mouse.getDX() * Options.getMouseXScale();
 		float y = Mouse.getDY() * Options.getMouseYScale();
-		this.yaw += x;
-		this.pitch += y;
+		rotateHorizontal(x);
+		rotateVertical(y);
 		updateViewMatrix();
+	}
+	
+	public void rotateHorizontal(float degrees) {
+		float radins = Maths.degreesToRadians(degrees);
+		forward.rotate(up, radins);
+		right.rotate(up, radins);
+	}
+
+	public void rotateVertical(float degrees) {
+		float radins = Maths.degreesToRadians(degrees);
+		forward.rotate(right, radins);
+		up.rotate(right, radins);
+	}
+
+	public void rotateAround(float degrees) {
+		float radins = Maths.degreesToRadians(degrees);
+		right.rotate(forward, radins);
+		up.rotate(forward, radins);
 	}
 
 	@Override
 	public void updateViewMatrix() {
-		this.viewMatrix = GLMaths.createViewMatrix(position, pitch, yaw);
+		this.viewMatrix = GLMaths.createViewMatrix(position, forward, right, up);
 	}
 
 	@Override
@@ -88,39 +105,7 @@ public class FreeCamera implements ICamera {
 
 	@Override
 	public Matrix4f getViewMatrix(Vector3f pos) {
-		return GLMaths.createViewMatrix(pos, pitch, yaw, 0);
-	}
-
-	@Override
-	public float getXRotation() {
-		return pitch;
-	}
-
-	@Override
-	public float getYRotation() {
-		return yaw;
-	}
-
-	@Override
-	public float getZRotation() {
-		return 0;
-	}
-
-	@Override
-	public Quaternion getRotation() {
-		return new Quaternion().setEulerAngles(pitch, yaw, 0);
-	}
-
-	@Override
-	public void setRotation(Quaternion newRotation) {
-		this.pitch = newRotation.getPitch();
-		this.yaw = newRotation.getYaw();
-	}
-
-	@Override
-	public void setRotation(float x, float y, float z) {
-		this.pitch = x;
-		this.yaw = y;
+		return GLMaths.createViewMatrix(pos, forward, right, up);
 	}
 
 	@Override
@@ -160,17 +145,17 @@ public class FreeCamera implements ICamera {
 
 	@Override
 	public Vector3f getUpVector() {
-		return Vector3f.UP;
+		return up;
 	}
 
 	@Override
 	public Vector3f getForwardVector() {
-		return Vector3f.NEG_Z;
+		return forward;
 	}
 
 	@Override
 	public Vector3f getRightVector() {
-		return Vector3f.rotate(getForwardVector(), Vector3f.UP, Maths.PI / 2.0f);
+		return right;
 	}
 
 	@Override

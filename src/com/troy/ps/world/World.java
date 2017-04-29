@@ -2,6 +2,7 @@ package com.troy.ps.world;
 
 import java.util.*;
 
+import com.troy.ps.cltypes.*;
 import com.troy.ps.main.*;
 import com.troyberry.math.*;
 import com.troyberry.opengl.mesh.*;
@@ -81,15 +82,14 @@ public class World {
 			initRadius[i] = Maths.randRange(1.0f, 50.0f);
 		}
 
-		vao = SphereGenerator.generateSphere(2);
+		vao = GeometryGenerator.generateSphere(5);
 		vao.bind();
-		Vbo posVbo = vao.createAttribute(1, initPos, 4, true);
-		Vbo colorVbo = vao.createAttribute(2, initColor, 4, true);
-		Vbo radiusVbo = vao.createAttribute(3, initRadius, 1, true);
+		Vbo posVbo = vao.createAttribute(1, initPos, 4, true, "positions");
+		Vbo colorVbo = vao.createAttribute(2, initColor, 4, true, "colors");
+		Vbo radiusVbo = vao.createAttribute(3, initRadius, 1, true, "radii");
 
 		OpenCLManager.setMem(posVbo, colorVbo, radiusVbo, initVel);
 		OpenCLManager.setWorld(this);
-		System.out.println("all done!");
 	}
 
 	private void createPlaneTest() {
@@ -97,17 +97,7 @@ public class World {
 		float[] initPos = new float[OpenCLManager.MAX_PARTICLES * 4];
 		float posRange = 60;
 		float zRange = 100;
-		for (int i = OpenCLManager.MAX_PARTICLES / 4 * 0; i < OpenCLManager.MAX_PARTICLES / 4 * 1; i++) {
-			// distribute the particles in a random circle around z axis
-			/**
-			float distance = Maths.randRange(0.001f, 500.5f);
-			float x = distance * Maths.sinFloat(i / (float)OpenCLManager.MAX_PARTICLES * Maths.SHORT_PI * 2);
-			float y = distance * Maths.cosFloat(i / (float)OpenCLManager.MAX_PARTICLES * Maths.SHORT_PI * 2);
-			initPos[i * 4 + 0] = x;
-			initPos[i * 4 + 1] = y;
-			initPos[i * 4 + 2] = -1000.0f;
-			initPos[i * 4 + 3] = 0.0f;
-			*/
+		for (int i = OpenCLManager.MAX_PARTICLES / 4 * 0 * 2; i < OpenCLManager.MAX_PARTICLES / 4 * 1 * 2; i++) {
 
 			initPos[i * 4 + 0] = Maths.randRange(-posRange, posRange);
 			initPos[i * 4 + 1] = Maths.randRange(-posRange, posRange) * 4;
@@ -116,7 +106,7 @@ public class World {
 
 		}
 
-		for (int i = OpenCLManager.MAX_PARTICLES / 4 * 1; i < OpenCLManager.MAX_PARTICLES / 4 * 2; i++) {
+		for (int i = OpenCLManager.MAX_PARTICLES / 4 * 1 * 2; i < OpenCLManager.MAX_PARTICLES / 4 * 2 * 2; i++) {
 
 			initPos[i * 4 + 0] = Maths.randRange(-posRange, posRange);
 			initPos[i * 4 + 1] = Maths.randRange(-posRange, posRange) * 4;
@@ -124,24 +114,25 @@ public class World {
 			initPos[i * 4 + 3] = 0.0f;
 
 		}
-
+		/*
 		for (int i = OpenCLManager.MAX_PARTICLES / 4 * 2; i < OpenCLManager.MAX_PARTICLES / 4 * 3; i++) {
-
+		
 			initPos[i * 4 + 0] = Maths.randRange(-posRange * 30, posRange * 30);
 			initPos[i * 4 + 1] = Maths.randRange(-posRange, posRange) * 30;
 			initPos[i * 4 + 2] = Maths.randRange(-zRange, zRange) - 2000.0f;
 			initPos[i * 4 + 3] = 0.0f;
-
+		
 		}
-
+		
 		for (int i = OpenCLManager.MAX_PARTICLES / 4 * 3; i < OpenCLManager.MAX_PARTICLES / 4 * 4; i++) {
-
+		
 			initPos[i * 4 + 0] = Maths.randRange(-posRange, posRange);
 			initPos[i * 4 + 1] = Maths.randRange(-posRange, posRange) * 30;
 			initPos[i * 4 + 2] = Maths.randRange(-posRange * 30, posRange * 30) - 2000.0f;
 			initPos[i * 4 + 3] = 0.0f;
-
+		
 		}
+		*/
 		float range = 500.0f;
 		float[] initVel = new float[OpenCLManager.MAX_PARTICLES * 4];
 		for (int i = 0; i < OpenCLManager.MAX_PARTICLES; i++) {
@@ -166,16 +157,18 @@ public class World {
 			initColor[i * 4 + 3] = 0.5f;
 		}
 
-		float[] radius = new float[OpenCLManager.MAX_PARTICLES];
+		float[] initRadius = new float[OpenCLManager.MAX_PARTICLES];
 		for (int i = 0; i < OpenCLManager.MAX_PARTICLES; i++) {
-			radius[i] = Maths.randRange(1.0f, 5.0f);
+			initRadius[i] = Maths.randRange(1.0f, 5.0f);
 		}
 
-		vao = SphereGenerator.generateSphere(2);
+		vao = GeometryGenerator.generateSphere(2);
 		vao.bind();
-		Vbo posVbo = vao.createAttribute(1, initPos, 4, true);
-		Vbo colorVbo = vao.createAttribute(2, initColor, 4, true);
-		Vbo radiusVbo = vao.createAttribute(3, radius, 1, true);
+
+		Vbo posVbo = vao.createAttribute(1, initPos, 4, true, "positions");
+		Vbo colorVbo = vao.createAttribute(2, initColor, 4, true, "colors");
+		Vbo radiusVbo = vao.createAttribute(3, initRadius, 1, true, "radii");
+
 
 		OpenCLManager.setMem(posVbo, colorVbo, radiusVbo, initVel);
 		OpenCLManager.setWorld(this);
@@ -184,6 +177,10 @@ public class World {
 
 	public Vao getVao() {
 		return vao;
+	}
+
+	public void cleanUp() {
+		vao.delete();
 	}
 
 }

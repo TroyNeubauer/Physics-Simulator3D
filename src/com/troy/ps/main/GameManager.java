@@ -13,12 +13,13 @@ public class GameManager implements GameState {
 	private ICamera camera;
 	
 	public void init(Window window) {
-		OpenCLManager.create();
+		//OpenCLManager.create();
 		Mouse.setGrabbed(true);
 		renderer = new MasterRenderer(window);
 		world = new World();
 		camera = new FreeCamera(window, 70);
-		OpenCLManager.forceUpdate();
+		//OpenCLManager.forceUpdate();
+		
 		Mouse.addMouseMotionCallback(() -> {
 			camera.onMouseMove();
 		});
@@ -29,15 +30,14 @@ public class GameManager implements GameState {
 	}
 
 	public void render(Window window) {
-		OpenCLManager.update();
-		window.clear();
+		//OpenCLManager.update();
 		renderer.render(camera, window, world);
-		window.update();
 	}
 
 	@Override
 	public void cleanUp() {
 		renderer.cleanUp();
+		world.cleanUp();
 	}
 
 }
