@@ -69,9 +69,9 @@ public class GameStateManager {
 	/**
 	 * Updates the current gamestate
 	 * @param window The current window
-	 * @param d 
+	 * @param delta
 	 */
-	public static void update(Window window, double delta) {
+	public static void update(Window window, float delta) {
 		if (currentGameState != null) currentGameState.update(delta, window);
 	}
 

@@ -7,7 +7,7 @@ import com.troyberry.opengl.util.*;
 
 public class FreeCamera implements ICamera {
 
-	private static float speed = 10;
+	private SmoothFloat speed = new SmoothFloat(1000.0f, 10.0f);
 	private float near, far;
 	private Vector3f position;
 	private Vector3f forward, right, up;
@@ -16,52 +16,67 @@ public class FreeCamera implements ICamera {
 	private float fov;
 
 	public FreeCamera(Window window, float fov) {
+		this.right = 	new Vector3f(1, 0, 0);
+		this.up = 		new Vector3f(0, 1, 0);
+		this.forward = 	new Vector3f(0, 0, 1);
 		this.fov = fov;
-		this.position = new Vector3f(0, 100, -100);
+		this.position = new Vector3f(0, 0, 0);
 
 		this.near = 0.01f;
 		this.far = 100000f;
 		updateProjectionMatrix(window);
 		updateViewMatrix();
 	}
+	
+	private boolean state = false, wireFrame = false;
+	Vector3f total = new Vector3f();
+	private Vector3f checkInputs(float delta) {
+		total.set(0.0f, 0.0f, 0.0f);
 
-	private Vector3f checkInputs() {
-		speed += Mouse.getDWheel() / 10.0f;
-		speed = Maths.clamp(0.001f, 1000f, speed);
-		Vector3f forward = getForwardVector();
-		Vector3f up = getUpVector();
-		Vector3f right = getRightVector();
-		Vector3f total = new Vector3f(0, 0, 0);
-
-		if (Keyboard.isKeyDown(Keyboard.KEY_W)) total.add(forward);
-
-		if (Keyboard.isKeyDown(Keyboard.KEY_S)) total.add(Vector3f.negate(forward));
+		if (Keyboard.isKeyDown(Keyboard.KEY_W)) total.add(Vector3f.negate(forward));
+		if (Keyboard.isKeyDown(Keyboard.KEY_S)) total.add(forward);
 
 		if (Keyboard.isKeyDown(Keyboard.KEY_A)) total.add(Vector3f.negate(right));
-
 		if (Keyboard.isKeyDown(Keyboard.KEY_D)) total.add(right);
 
 		if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)) total.add(up);
 		if (Keyboard.isKeyDown(Keyboard.KEY_LEFT_SHIFT)) total.add(Vector3f.negate(up));
-
-		if (!total.equals(Vector3f.ZERO)) {
-			total.setLength(speed);
+		if (Mouse.hasScrolled()) {
+			speed.setTarget(speed.getTarget() + speed.getTarget() * (Mouse.getDWheel() * 30) * Window.getFrameTimeSeconds());
+			speed.clamp(0.0000005f, 2500000f);
+			Mouse.resetScroll();
 		}
+		System.out.println(speed.get());
+		speed.update(delta);
+		speed.clamp(0.000000001f, 100000f);
+		
+		total.setLength(delta * speed.get());
+
+		if (Keyboard.isKeyDown(Keyboard.KEY_G)) {
+			if (!state) {
+				state = true;
+				wireFrame = !wireFrame;
+				GLUtil.goWireframe(wireFrame);
+			}
+		} else state = false;
+
+		if (Keyboard.isKeyDown(Keyboard.KEY_Q)) rotateAround(-Window.getFrameTimeSeconds() * 45.0f);
+		if (Keyboard.isKeyDown(Keyboard.KEY_E)) rotateAround(Window.getFrameTimeSeconds() * 45.0f);
 		updateViewMatrix();
 		return total;
 	}
 
 	@Override
-	public void updateProjectionMatrix(Window window) {
-		this.projectionMatrix = GLMaths.createPerspectiveProjectionMatrix(window.getWidth(), window.getHeight(), near, far, fov);
-	}
-
-	@Override
 	public void onMouseMove() {
-		float x = Mouse.getDX() * Options.getMouseXScale();
-		float y = Mouse.getDY() * Options.getMouseYScale();
-		rotateHorizontal(x);
-		rotateVertical(y);
+		if (Mouse.isButtonDown(0)) {
+			Mouse.setGrabbed(true);
+			rotateVertical(Mouse.getDY() * Options.getMouseYScale());
+			rotateHorizontal(Mouse.getDX() * Options.getMouseXScale());
+		} else {
+			Mouse.setGrabbed(false);
+			Mouse.resetDeltas();
+		}
+		
 		updateViewMatrix();
 	}
 	
@@ -87,6 +102,11 @@ public class FreeCamera implements ICamera {
 	public void updateViewMatrix() {
 		this.viewMatrix = GLMaths.createViewMatrix(position, forward, right, up);
 	}
+	
+	@Override
+	public void updateProjectionMatrix(Window window) {
+		this.projectionMatrix = GLMaths.createPerspectiveProjectionMatrix(window.getWidth(), window.getHeight(), near, far, fov);
+	}
 
 	@Override
 	public Matrix4f getProjectionMatrix() {
@@ -100,6 +120,7 @@ public class FreeCamera implements ICamera {
 
 	@Override
 	public Matrix4f getViewMatrix() {
+		if(viewMatrix == null) updateViewMatrix();
 		return viewMatrix;
 	}
 
@@ -160,7 +181,14 @@ public class FreeCamera implements ICamera {
 
 	@Override
 	public void move(float delta) {
-		this.position.add(checkInputs());
+		this.position.add(checkInputs(delta));
+	}
+
+	@Override
+	public void setUpDirection(Vector3f newUp) {
+		this.up = Vector3f.normalise(newUp);
+		this.right = Vector3f.arbitraryOrthogonal(up);
+		this.forward = Vector3f.cross(right, up);
 	}
 
 }

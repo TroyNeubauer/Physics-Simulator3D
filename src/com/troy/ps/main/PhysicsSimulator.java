@@ -11,6 +11,7 @@ import com.troyberry.logging.*;
 import com.troyberry.math.*;
 import com.troyberry.opencl.*;
 import com.troyberry.opengl.input.*;
+import com.troyberry.opengl.mesh.*;
 import com.troyberry.opengl.util.*;
 import com.troyberry.resources.*;
 import com.troyberry.util.*;
@@ -38,13 +39,13 @@ public class PhysicsSimulator implements Runnable {
 		VersionManager.setVersion(new Version());
 		GLUtil.init();
 		window = new Window(1280, 720);
+
 		window.setClearColor(1, 1, 1);
-		window.show();
 		window.enableFPSInTitle();
-		
+		window.center();
+		window.show();
 		Mouse.init(window);
 		Keyboard.init(window);
-
 		
 		GameStateManager.checkForChanges(window);
 		
