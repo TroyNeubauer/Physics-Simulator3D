@@ -10,8 +10,19 @@ import com.troyberry.noise.*;
 import com.troyberry.opengl.mesh.*;
 import com.troyberry.opengl.util.*;
 import com.troyberry.util.*;
+import com.troyberry.util.Interpolation.*;
 
-public class Planet {
+public class Planet extends Body {
+
+	private static CustomKeyFrameManager<Range> planetRadiusToMountainHeightMultaplier = new CustomKeyFrameManager<Range>(InterpolationType.COSINE);
+
+	static {
+		planetRadiusToMountainHeightMultaplier.addFrame(Double.MIN_VALUE, new Range(0.0, Constants.ONE_MILLIMETER));
+		planetRadiusToMountainHeightMultaplier.addFrame(Constants.ONE_KILOMETER, new Range(0.0, Constants.ONE_CENTIMETER));
+		planetRadiusToMountainHeightMultaplier.addFrame(Constants.ONE_HUNDRED_KILOMETERS, new Range(0.0, Constants.ONE_METER * 2.0));
+		planetRadiusToMountainHeightMultaplier.addFrame(Constants.ONE_THOUSAND_KILOMETERS, new Range(0.0, Constants.ONE_METER * 10.0));
+		planetRadiusToMountainHeightMultaplier.addFrame(Constants.TEN_THOUSAND_KILOMETERS, new Range(0.0, Constants.ONE_METER * 20.0));
+	}
 
 	private static final double t = (1.0 + Math.sqrt(5.0)) / 2.0;
 
@@ -26,25 +37,22 @@ public class Planet {
 	private SimplexNoise noise;
 	private Vao mesh;
 
-	private Vector3f position;
-	private Vector3f velocity;
-	private Vector3f rotation, rotationVelocity;
-
-	private float radius, mass;
+	private float radius, rockeyness, maxMountain;
 
 	public Planet(Vector3f position, Vector3f velocity, Vector3f rotation, Vector3f rotationVelocity, long seed, int initalRecursion) {
-		this.position = position;
-		this.velocity = velocity;
-		this.rotation = rotation;
-		this.rotationVelocity = rotationVelocity;
+		super(position, velocity, rotation, rotationVelocity);
 		this.radius = Maths.randRange(Constants.TEN_KILOMETERS, Constants.ONE_THOUSAND_KILOMETERS * 30.0f);//between 10KM and 15,000KM
-		System.out.println("radius " + radius);
+		this.rockeyness = Maths.randRange(0.5f, 1.6f);
 
 		this.vertices = new ArrayList<Vector3d>(getVertexCount(initalRecursion));
 		this.indices = new ArrayList<Vector3i>(20 * Maths.pow(4, initalRecursion));
 		this.givenVaos = new ArrayList<Vao>();
 		this.seed = seed;
-		noise = new SimplexNoise(10.0, 1.1, seed);
+
+		this.maxMountain = Math.abs(Maths.randRangeFloat(planetRadiusToMountainHeightMultaplier.getValue(radius)));
+		System.out.println("radius " + Constants.getDistanceText(radius) + ", max Mt." + Constants.getDistanceText(maxMountain) + ", rockeyness " + rockeyness);
+		this.noise = new SimplexNoise(maxMountain, rockeyness, seed);
+
 		Timer t = new Timer();
 		setup(initalRecursion, (float) radius);
 		t.stop();
@@ -52,9 +60,9 @@ public class Planet {
 		this.mesh = getEntireMesh();
 	}
 
-	public void update() {
-		this.position.add(Vector3f.scale(velocity, Window.getFrameTimeSeconds()));
-		this.rotation.add(Vector3f.scale(rotationVelocity, Window.getFrameTimeSeconds()));
+	public void update(float delta) {
+		this.position.add(Vector3f.scale(velocity, delta));
+		this.rotation.add(Vector3f.scale(rotationVelocity, delta));
 	}
 
 	public Vector3f[] findSutableSpawnLocation() {
@@ -63,6 +71,7 @@ public class Planet {
 		double b = Maths.randRange(-Math.PI / 2.0, Math.PI / 2.0);
 		result[1] = new Vector3f(radius * Maths.cosFloat(b) * Maths.sinFloat(a), radius * Maths.cosFloat(b) * Maths.cosFloat(a), radius * Maths.sinFloat(b));
 		result[0] = Vector3f.add(result[1], position);
+		result[0] = Vector3f.addLength(result[0], Constants.ONE_METER);
 		result[1].normalise();
 		return result;
 	}
@@ -135,8 +144,7 @@ public class Planet {
 				Vector3d p1 = vertices.get(triangle.x);
 				Vector3d p2 = vertices.get(triangle.y);
 				Vector3d p3 = vertices.get(triangle.z);
-				
-				
+
 				Vector3d n1 = Vector3d.addAndSetLength(p1, p2, length);
 				Vector3d n2 = Vector3d.addAndSetLength(p2, p3, length);
 				Vector3d n3 = Vector3d.addAndSetLength(p3, p1, length);
@@ -157,7 +165,6 @@ public class Planet {
 		colors = new ArrayList<Vector3f>(vertices.size());
 		double range = 10.0;
 		double mult = 20.0;
-		SimplexNoise noise = new SimplexNoise(range, 1.1, new Random().nextLong());
 
 		for (Vector3d vertex : vertices) {
 			double value = noise.getNoise(vertex.x / 1000.0, vertex.y / 1000.0, vertex.z / 1000.0);
@@ -165,17 +172,15 @@ public class Planet {
 			value = Maths.clamp(0.0, range * 2, value);
 			value /= (range * 2);
 			double origionalValue = value;
-			value /= mult;
-			value += 0.9;
 
 			origionalValue /= 2.0;
 			origionalValue += 0.25;
-			
+
 			newVertices.add(Vector3d.scale(vertex, (float) value));
 			colors.add(new Vector3f((float) origionalValue, (float) origionalValue, (float) origionalValue));
 		}
 
-		vertices = newVertices;
+		//vertices = newVertices;
 	}
 
 	private List<Vector3i> getFaces(Vector3f direction, double radius) {
@@ -220,46 +225,6 @@ public class Planet {
 
 		}
 		return 10000;
-	}
-
-	public Vector3f getPosition() {
-		return position;
-	}
-
-	public void setPosition(Vector3f position) {
-		this.position = position;
-	}
-
-	public Vector3f getVelocity() {
-		return velocity;
-	}
-
-	public void setVelocity(Vector3f velocity) {
-		this.velocity = velocity;
-	}
-
-	public Vector3f getRotation() {
-		return rotation;
-	}
-
-	public void setRotation(Vector3f rotation) {
-		this.rotation = rotation;
-	}
-
-	public Vector3f getRotationVelocity() {
-		return rotationVelocity;
-	}
-
-	public void setRotationVelocity(Vector3f rotationVelocity) {
-		this.rotationVelocity = rotationVelocity;
-	}
-
-	public float getMass() {
-		return mass;
-	}
-
-	public void setMass(float mass) {
-		this.mass = mass;
 	}
 
 	public float getRadius() {

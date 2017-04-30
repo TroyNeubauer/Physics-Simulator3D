@@ -7,68 +7,67 @@ import com.troyberry.opengl.util.*;
 
 public class FreeCamera implements ICamera {
 
-	private SmoothFloat speed = new SmoothFloat(1000.0f, 10.0f);
+	private SmoothFloat speed = new SmoothFloat(1000.0f, 5.0f);
 	private float near, far;
 	private Vector3f position;
 	private Vector3f forward, right, up;
-	
+
 	private Matrix4f projectionMatrix, viewMatrix;
 	private float fov;
 
 	public FreeCamera(Window window, float fov) {
-		this.right = 	new Vector3f(1, 0, 0);
-		this.up = 		new Vector3f(0, 1, 0);
-		this.forward = 	new Vector3f(0, 0, 1);
+		this.right = new Vector3f(1, 0, 0);
+		this.up = new Vector3f(0, 1, 0);
+		this.forward = new Vector3f(0, 0, 1);
 		this.fov = fov;
 		this.position = new Vector3f(0, 0, 0);
 
-		this.near = 0.01f;
-		this.far = 100000f;
+		this.near = Constants.ONE_METER * 5;
+		this.far = Constants.ONE_HUNDRED_THOUSAND_KILOMETERS;
 		updateProjectionMatrix(window);
 		updateViewMatrix();
 	}
-	
-	private boolean state = false, wireFrame = false;
+
+	private boolean wireFrame = false, mouseControl;
 	Vector3f total = new Vector3f();
+
 	private Vector3f checkInputs(float delta) {
 		total.set(0.0f, 0.0f, 0.0f);
 
-		if (Keyboard.isKeyDown(Keyboard.KEY_W)) total.add(Vector3f.negate(forward));
-		if (Keyboard.isKeyDown(Keyboard.KEY_S)) total.add(forward);
+		if (Controls.FORWARD.isPressed()) total.add(Vector3f.negate(forward));
+		if (Controls.BACKWARD.isPressed()) total.add(forward);
 
-		if (Keyboard.isKeyDown(Keyboard.KEY_A)) total.add(Vector3f.negate(right));
-		if (Keyboard.isKeyDown(Keyboard.KEY_D)) total.add(right);
+		if (Controls.LEFT.isPressed()) total.add(Vector3f.negate(right));
+		if (Controls.RIGHT.isPressed()) total.add(right);
 
-		if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)) total.add(up);
-		if (Keyboard.isKeyDown(Keyboard.KEY_LEFT_SHIFT)) total.add(Vector3f.negate(up));
+		if (Controls.UP.isPressed()) total.add(up);
+		if (Controls.DOWN.isPressed()) total.add(Vector3f.negate(up));
 		if (Mouse.hasScrolled()) {
 			speed.setTarget(speed.getTarget() + speed.getTarget() * (Mouse.getDWheel() * 30) * Window.getFrameTimeSeconds());
 			speed.clamp(0.0000005f, 2500000f);
 			Mouse.resetScroll();
 		}
-		System.out.println(speed.get());
 		speed.update(delta);
 		speed.clamp(0.000000001f, 100000f);
-		
+
 		total.setLength(delta * speed.get());
 
-		if (Keyboard.isKeyDown(Keyboard.KEY_G)) {
-			if (!state) {
-				state = true;
-				wireFrame = !wireFrame;
-				GLUtil.goWireframe(wireFrame);
-			}
-		} else state = false;
+		if (Controls.POLYGON.hasBeenPressed()) {
+			wireFrame = !wireFrame;
+			GLUtil.goWireframe(wireFrame);
+		}
 
-		if (Keyboard.isKeyDown(Keyboard.KEY_Q)) rotateAround(-Window.getFrameTimeSeconds() * 45.0f);
-		if (Keyboard.isKeyDown(Keyboard.KEY_E)) rotateAround(Window.getFrameTimeSeconds() * 45.0f);
+		if (Controls.ROTATE_LEFT.isPressed()) rotateAround(-Window.getFrameTimeSeconds() * 45.0f);
+		if (Controls.ROTATE_RIGHT.isPressed()) rotateAround(Window.getFrameTimeSeconds() * 45.0f);
 		updateViewMatrix();
 		return total;
 	}
 
 	@Override
 	public void onMouseMove() {
-		if (Mouse.isButtonDown(0)) {
+		if(Controls.LOOK.hasBeenPressed()) mouseControl = !mouseControl;
+		
+		if (mouseControl) {
 			Mouse.setGrabbed(true);
 			rotateVertical(Mouse.getDY() * Options.getMouseYScale());
 			rotateHorizontal(Mouse.getDX() * Options.getMouseXScale());
@@ -76,10 +75,10 @@ public class FreeCamera implements ICamera {
 			Mouse.setGrabbed(false);
 			Mouse.resetDeltas();
 		}
-		
+
 		updateViewMatrix();
 	}
-	
+
 	public void rotateHorizontal(float degrees) {
 		float radins = Maths.degreesToRadians(degrees);
 		forward.rotate(up, radins);
@@ -102,7 +101,7 @@ public class FreeCamera implements ICamera {
 	public void updateViewMatrix() {
 		this.viewMatrix = GLMaths.createViewMatrix(position, forward, right, up);
 	}
-	
+
 	@Override
 	public void updateProjectionMatrix(Window window) {
 		this.projectionMatrix = GLMaths.createPerspectiveProjectionMatrix(window.getWidth(), window.getHeight(), near, far, fov);
@@ -120,7 +119,7 @@ public class FreeCamera implements ICamera {
 
 	@Override
 	public Matrix4f getViewMatrix() {
-		if(viewMatrix == null) updateViewMatrix();
+		if (viewMatrix == null) updateViewMatrix();
 		return viewMatrix;
 	}
 
@@ -156,12 +155,12 @@ public class FreeCamera implements ICamera {
 
 	@Override
 	public boolean hasFarPlane() {
-		return true;
+		return false;
 	}
 
 	@Override
 	public float getFarPlane() {
-		return far;
+		return -1;
 	}
 
 	@Override
