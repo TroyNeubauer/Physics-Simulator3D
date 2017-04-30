@@ -16,6 +16,9 @@ public class Planet extends Body {
 
 	private static CustomKeyFrameManager<Range> planetRadiusToMountainHeightMultaplier = new CustomKeyFrameManager<Range>(InterpolationType.COSINE);
 
+	private static Vector3f color = new Vector3f(1, 0, 1);
+	private static Vector3f color2 = new Vector3f(0, 0, 1);
+
 	static {
 		planetRadiusToMountainHeightMultaplier.addFrame(Double.MIN_VALUE, new Range(0.0, Constants.ONE_MILLIMETER));
 		planetRadiusToMountainHeightMultaplier.addFrame(Constants.ONE_KILOMETER, new Range(0.0, Constants.ONE_CENTIMETER));
@@ -42,6 +45,7 @@ public class Planet extends Body {
 	public Planet(Vector3f position, Vector3f velocity, Vector3f rotation, Vector3f rotationVelocity, long seed, int initalRecursion) {
 		super(position, velocity, rotation, rotationVelocity);
 		this.radius = Maths.randRange(Constants.TEN_KILOMETERS, Constants.ONE_THOUSAND_KILOMETERS * 30.0f);//between 10KM and 15,000KM
+		this.radius = 10;
 		this.rockeyness = Maths.randRange(0.5f, 1.6f);
 
 		this.vertices = new ArrayList<Vector3d>(getVertexCount(initalRecursion));
@@ -176,11 +180,42 @@ public class Planet extends Body {
 			origionalValue /= 2.0;
 			origionalValue += 0.25;
 
-			newVertices.add(Vector3d.scale(vertex, (float) value));
-			colors.add(new Vector3f((float) origionalValue, (float) origionalValue, (float) origionalValue));
+			//newVertices.add(Vector3d.scale(vertex, (float) value));
+			colors.add(color2);
 		}
 
 		//vertices = newVertices;
+	}
+
+	public void reGenerate(Vector3d position, double minDotProduct) {
+		for (int i = 0; i < indices.size(); i++) {
+			Vector3i triangle = indices.get(i);
+			Vector3d p1 = vertices.get(triangle.x);
+			Vector3d p2 = vertices.get(triangle.y);
+			Vector3d p3 = vertices.get(triangle.z);
+			int count = 0;
+			if (Vector3d.dot(p1, position) >= minDotProduct) count++;
+			if (Vector3d.dot(p2, position) >= minDotProduct) count++;
+			if (Vector3d.dot(p3, position) >= minDotProduct) count++;
+			if (count >= 0) {
+				Vector3d n1 = Vector3d.addAndSetLength(p1, p2, radius);
+				Vector3d n2 = Vector3d.addAndSetLength(p2, p3, radius);
+				Vector3d n3 = Vector3d.addAndSetLength(p3, p1, radius);
+				indices.remove(i);
+
+				int n1loc = add(n1);
+				int n2loc = add(n2);
+				int n3loc = add(n3);
+
+				indices.add(i++, new Vector3i(triangle.x, n1loc, n3loc));
+				indices.add(i++, new Vector3i(n3loc, n1loc, n2loc));
+				indices.add(i++, new Vector3i(n1loc, triangle.y, n2loc));
+				indices.add(i, new Vector3i(n3loc, n2loc, triangle.z));
+			}
+		}
+		for (int i = colors.size(); i < vertices.size(); i++)
+			colors.add(color);
+		this.mesh = getEntireMesh();
 	}
 
 	private List<Vector3i> getFaces(Vector3f direction, double radius) {
@@ -188,7 +223,7 @@ public class Planet extends Body {
 		return result;
 	}
 
-	public Vao getEntireMesh() {
+	private Vao getEntireMesh() {
 		Vao vao = Vao.create();
 		givenVaos.add(vao);
 		vao.createIndexBuffer(ArrayUtil.toIntArrayFromVec3(indices));
