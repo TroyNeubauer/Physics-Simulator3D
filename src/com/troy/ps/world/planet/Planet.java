@@ -57,7 +57,6 @@ public class Planet extends Body {
 	public Planet(Vector3f position, Vector3f velocity, Vector3f rotation, Vector3f rotationVelocity, long seed, int initalRecursion) {
 		super(position, velocity, rotation, rotationVelocity);
 		this.radius = Maths.randRange(Constants.TEN_KILOMETERS, Constants.ONE_THOUSAND_KILOMETERS * 30.0f);//between 10KM and 15,000KM
-		this.radius = 10;
 		this.rockeyness = Maths.randRange(0.5f, 1.6f);
 		this.midPointsCache = new Hashtable<Long, Integer>(25 * Maths.pow(4, initalRecursion), 0.8f);
 		this.vertices = new ArrayList<Vector3d>(getVertexCount(initalRecursion));
@@ -88,6 +87,9 @@ public class Planet extends Body {
 		double a = Maths.randRange(-Math.PI, Math.PI);
 		double b = Maths.randRange(-Math.PI / 2.0, Math.PI / 2.0);
 		result[1] = new Vector3f(radius * Maths.cosFloat(b) * Maths.sinFloat(a), radius * Maths.cosFloat(b) * Maths.cosFloat(a), radius * Maths.sinFloat(b));
+
+		result[1] = new Vector3f(0, 1 * radius, 0);
+
 		result[0] = Vector3f.add(result[1], position);
 		result[0] = Vector3f.addLength(result[0], Constants.ONE_METER);
 		result[1].normalise();
@@ -242,38 +244,38 @@ public class Planet extends Body {
 		return index;
 	}
 
-	public void reGenerate(Vector3d position, double minDotProduct) {
+	public void reGenerate(Vector3d position, double minDistance, int times) {
 		System.out.println("generating...");
 		position = Vector3d.normalise(position);
-		boolean divided = false;
-		for (int i = 0; i < faces.size();) {
-			Vector3i triangle = faces.get(i).face;
-			Vector3d center = Vector3d.sumAndNormalize(vertices.get(triangle.x), vertices.get(triangle.y), vertices.get(triangle.z));
-			if (Vector3d.dot(center, position) >= minDotProduct) {
-				divided = true;
-				i = divide(i);
-			} else i++;
+		List<Face> localFaces = new ArrayList<Face>();
+		for (Face face : faces) {
+			System.out.println("checking face");
+			double distance = Maths.minTriangleDistance(vertices.get(face.face.x), vertices.get(face.face.y), vertices.get(face.face.z), position);
+			if (distance <= minDistance) {
+				System.out.println("loading inital face");
+				localFaces.add(face);
+			}
+
 		}
-		//We weren't able to divide because we are looking to small, so subdivide the most promising one
-		if (!divided) {
-			int bestTriangle = -1;
-			double bestValue = -1.0;
-			for (int i = 0; i < faces.size(); i++) {
-				Vector3i face = faces.get(i).face;
-				Vector3d center = Vector3d.sumAndNormalize(vertices.get(face.x), vertices.get(face.y), vertices.get(face.z));
-				double dot = Vector3d.dot(center, position);
-				if (bestTriangle == -1) {
-					bestTriangle = i;
-					bestValue = dot;
-				} else {//There was other stuff in the map
-					if (dot > bestValue) {
-						bestTriangle = i;
-						bestValue = dot;
-					}
+		for(int time = 0; time < times; time++) {
+			for(int i = 0; i < localFaces.size(); i++) {
+				Face face = localFaces.get(i);
+				double distance = Maths.minTriangleDistance(vertices.get(face.face.x), vertices.get(face.face.y), vertices.get(face.face.z), position);
+				if (distance <= minDistance) {
+					int n1loc = getMiddle(face.face.x, face.face.y);
+					int n2loc = getMiddle(face.face.y, face.face.z);
+					int n3loc = getMiddle(face.face.z, face.face.x);
+
+					localFaces.remove(i);
+
+					localFaces.add(i++, new Face(new Vector3i(face.face.x, n1loc, n3loc)));
+					localFaces.add(i++, new Face(new Vector3i(n3loc, n1loc, n2loc)));
+					localFaces.add(i++, new Face(new Vector3i(n1loc, face.face.y, n2loc)));
+					localFaces.add(i, new Face(new Vector3i(n3loc, n2loc, face.face.z)));
 				}
 			}
-			divide(bestTriangle);
 		}
+		faces.addAll(localFaces);
 
 		for (int i = colors.size(); i < vertices.size(); i++)
 			colors.add(color);

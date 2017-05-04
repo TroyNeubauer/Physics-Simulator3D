@@ -27,12 +27,10 @@ public class GameManager implements GameState {
 		camera.setPosition(new Vector3f(0, 0, 15));
 		//OpenCLManager.forceUpdate();
 		planet = new Planet(new Vector3f(0, 0, 0), new Random().nextLong(), 0);
-		planet.setRotationVelocity(new Vector3f(0, 20, 0));
 		Vector3f[] vecs = planet.findSutableSpawnLocation();
 		camera.setPosition(vecs[0]);
 		camera.setUpDirection(vecs[1]);
-		for (int i = 0; i < 12; i++)
-			planet.reGenerate(new Vector3d(vecs[1]), 0.99999);
+		planet.reGenerate(vecs[1].toDouble(), Constants.TEN_THOUSAND_KILOMETERS, 10);
 
 		planet.compress();
 	}

@@ -44,6 +44,7 @@ public class PlanetRenderer {
 				.loadMatrix(Matrix4f.multiply(GLMaths.createTransformationMatrix(planet.getPosition()), GLMaths.createRotationMatrix(rot.x, rot.y, rot.z)));
 		shader.lightPos.loadVec3(light.getPosition());
 		shader.lightColor.loadVec3(light.getColor());
+		shader.ambientLighting.loadVec3(0.2f);
 		GLUtil.disableBlending();
 		GLUtil.enableDepthTesting();
 		GLUtil.cullBackFaces(cull);

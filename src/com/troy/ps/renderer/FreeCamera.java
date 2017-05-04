@@ -22,8 +22,8 @@ public class FreeCamera implements ICamera {
 		this.fov = fov;
 		this.position = new Vector3f(0, 0, 0);
 
-		this.near = Constants.ONE_CENTIMETER;
-		this.far = Constants.ONE_MILLION_KILOMETERS;
+		this.near = Constants.ONE_KILOMETER;
+		this.far = Constants.ONE_HUNDRED_MILLION_KILOMETERS;
 		updateProjectionMatrix(window);
 		updateViewMatrix();
 	}
