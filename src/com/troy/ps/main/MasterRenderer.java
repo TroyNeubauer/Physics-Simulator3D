@@ -12,7 +12,6 @@ public class MasterRenderer {
 	private PlanetRenderer planetRenderer;
 	private Fbo multiSampleFbo;
 	private Fbo outputFbo;
-	
 
 	public MasterRenderer(Window window) {
 		pointRenderer = new PointRenderer();
@@ -21,11 +20,11 @@ public class MasterRenderer {
 		outputFbo = new Fbo(Window.getInstance().getWidth(), Window.getInstance().getHeight(), Fbo.DEPTH_RENDER_BUFFER);
 	}
 
-	public void render(ICamera camera, Window window, Planet planet) {
+	public void render(ICamera camera, Window window, Planet planet, Light light) {
 		multiSampleFbo.clear();
 		//pointRenderer.render(world, camera);
-		planetRenderer.render(planet, camera);
-		
+		planetRenderer.render(planet, camera, light);
+
 		multiSampleFbo.unbindFrameBuffer();
 		multiSampleFbo.resolveTo(outputFbo);
 		outputFbo.bindFrameBuffer();

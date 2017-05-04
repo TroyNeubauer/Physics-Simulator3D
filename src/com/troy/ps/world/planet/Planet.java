@@ -1,6 +1,7 @@
 package com.troy.ps.world.planet;
 
 import java.util.*;
+import java.util.Map.*;
 
 import com.troy.ps.main.*;
 import com.troy.ps.world.*;
@@ -8,7 +9,6 @@ import com.troyberry.logging.Timer;
 import com.troyberry.math.*;
 import com.troyberry.noise.*;
 import com.troyberry.opengl.mesh.*;
-import com.troyberry.opengl.util.*;
 import com.troyberry.util.*;
 import com.troyberry.util.Interpolation.*;
 
@@ -29,11 +29,19 @@ public class Planet extends Body {
 
 	private static final double t = (1.0 + Math.sqrt(5.0)) / 2.0;
 
-	private List<Vector3d> vertices;
-	private List<Vector3i> indices;
-	private List<Vector3f> colors;
+	/**
+	 * Temporary cache of edge midpoints used during subdivision to ensure vertices are not duplicated.
+	 */
+	private Hashtable<Long, Integer> midPointsCache;
 
-	private List<Vao> givenVaos;
+	private ArrayList<Vector3d> vertices;
+	private ArrayList<Face> faces;
+	private ArrayList<Vector3f> colors;
+	private ArrayList<Vector3f> normals;
+
+	private boolean dataNeedsUpdating = true;
+
+	private ArrayList<Vao> givenVaos;
 
 	private long seed;
 
@@ -42,14 +50,18 @@ public class Planet extends Body {
 
 	private float radius, rockeyness, maxMountain;
 
+	public Planet(Vector3f position, long seed, int initalRecursion) {
+		this(position, new Vector3f(), new Vector3f(), new Vector3f(), seed, initalRecursion);
+	}
+
 	public Planet(Vector3f position, Vector3f velocity, Vector3f rotation, Vector3f rotationVelocity, long seed, int initalRecursion) {
 		super(position, velocity, rotation, rotationVelocity);
 		this.radius = Maths.randRange(Constants.TEN_KILOMETERS, Constants.ONE_THOUSAND_KILOMETERS * 30.0f);//between 10KM and 15,000KM
 		this.radius = 10;
 		this.rockeyness = Maths.randRange(0.5f, 1.6f);
-
+		this.midPointsCache = new Hashtable<Long, Integer>(25 * Maths.pow(4, initalRecursion), 0.8f);
 		this.vertices = new ArrayList<Vector3d>(getVertexCount(initalRecursion));
-		this.indices = new ArrayList<Vector3i>(20 * Maths.pow(4, initalRecursion));
+		this.faces = new ArrayList<Face>(20 * Maths.pow(4, initalRecursion));
 		this.givenVaos = new ArrayList<Vao>();
 		this.seed = seed;
 
@@ -62,6 +74,8 @@ public class Planet extends Body {
 		t.stop();
 		System.out.println("gen time " + t.getTime());
 		this.mesh = getEntireMesh();
+
+		System.out.println(i);
 	}
 
 	public void update(float delta) {
@@ -115,54 +129,37 @@ public class Planet extends Body {
 		// create 20 triangles of the icosahedron
 
 		// 5 indices around point 0
-		indices.add(new Vector3i(0, 11, 5));
-		indices.add(new Vector3i(0, 5, 1));
-		indices.add(new Vector3i(0, 1, 7));
-		indices.add(new Vector3i(0, 7, 10));
-		indices.add(new Vector3i(0, 10, 11));
+		faces.add(new Face(new Vector3i(0, 11, 5)));
+		faces.add(new Face(new Vector3i(0, 5, 1)));
+		faces.add(new Face(new Vector3i(0, 1, 7)));
+		faces.add(new Face(new Vector3i(0, 7, 10)));
+		faces.add(new Face(new Vector3i(0, 10, 11)));
 
 		// 5 adjacent indices 
-		indices.add(new Vector3i(1, 5, 9));
-		indices.add(new Vector3i(5, 11, 4));
-		indices.add(new Vector3i(11, 10, 2));
-		indices.add(new Vector3i(10, 7, 6));
-		indices.add(new Vector3i(7, 1, 8));
+		faces.add(new Face(new Vector3i(1, 5, 9)));
+		faces.add(new Face(new Vector3i(5, 11, 4)));
+		faces.add(new Face(new Vector3i(11, 10, 2)));
+		faces.add(new Face(new Vector3i(10, 7, 6)));
+		faces.add(new Face(new Vector3i(7, 1, 8)));
 
 		// 5 indices around point 3
-		indices.add(new Vector3i(3, 9, 4));
-		indices.add(new Vector3i(3, 4, 2));
-		indices.add(new Vector3i(3, 2, 6));
-		indices.add(new Vector3i(3, 6, 8));
-		indices.add(new Vector3i(3, 8, 9));
+		faces.add(new Face(new Vector3i(3, 9, 4)));
+		faces.add(new Face(new Vector3i(3, 4, 2)));
+		faces.add(new Face(new Vector3i(3, 2, 6)));
+		faces.add(new Face(new Vector3i(3, 6, 8)));
+		faces.add(new Face(new Vector3i(3, 8, 9)));
 
 		// 5 adjacent indices 
-		indices.add(new Vector3i(4, 9, 5));
-		indices.add(new Vector3i(2, 4, 11));
-		indices.add(new Vector3i(6, 2, 10));
-		indices.add(new Vector3i(8, 6, 7));
-		indices.add(new Vector3i(9, 8, 1));
+		faces.add(new Face(new Vector3i(4, 9, 5)));
+		faces.add(new Face(new Vector3i(2, 4, 11)));
+		faces.add(new Face(new Vector3i(6, 2, 10)));
+		faces.add(new Face(new Vector3i(8, 6, 7)));
+		faces.add(new Face(new Vector3i(9, 8, 1)));
 
 		for (int i = 0; i < initalRecursion; i++) {
-			List<Vector3i> newindices = new ArrayList<Vector3i>();
-			for (Vector3i triangle : indices) {
-				Vector3d p1 = vertices.get(triangle.x);
-				Vector3d p2 = vertices.get(triangle.y);
-				Vector3d p3 = vertices.get(triangle.z);
-
-				Vector3d n1 = Vector3d.addAndSetLength(p1, p2, length);
-				Vector3d n2 = Vector3d.addAndSetLength(p2, p3, length);
-				Vector3d n3 = Vector3d.addAndSetLength(p3, p1, length);
-
-				int n1loc = add(n1);
-				int n2loc = add(n2);
-				int n3loc = add(n3);
-
-				newindices.add(new Vector3i(triangle.x, n1loc, n3loc));
-				newindices.add(new Vector3i(n3loc, n1loc, n2loc));
-				newindices.add(new Vector3i(n1loc, triangle.y, n2loc));
-				newindices.add(new Vector3i(n3loc, n2loc, triangle.z));
+			for (int index = 0; index < faces.size();) {
+				index = divide(index);
 			}
-			indices = newindices;
 		}
 
 		List<Vector3d> newVertices = new ArrayList<Vector3d>(vertices.size());
@@ -187,35 +184,100 @@ public class Planet extends Body {
 		//vertices = newVertices;
 	}
 
-	public void reGenerate(Vector3d position, double minDotProduct) {
-		for (int i = 0; i < indices.size(); i++) {
-			Vector3i triangle = indices.get(i);
-			Vector3d p1 = vertices.get(triangle.x);
-			Vector3d p2 = vertices.get(triangle.y);
-			Vector3d p3 = vertices.get(triangle.z);
-			int count = 0;
-			if (Vector3d.dot(p1, position) >= minDotProduct) count++;
-			if (Vector3d.dot(p2, position) >= minDotProduct) count++;
-			if (Vector3d.dot(p3, position) >= minDotProduct) count++;
-			if (count >= 0) {
-				Vector3d n1 = Vector3d.addAndSetLength(p1, p2, radius);
-				Vector3d n2 = Vector3d.addAndSetLength(p2, p3, radius);
-				Vector3d n3 = Vector3d.addAndSetLength(p3, p1, radius);
-				indices.remove(i);
+	int i = 0;
 
-				int n1loc = add(n1);
-				int n2loc = add(n2);
-				int n3loc = add(n3);
+	/**
+	 * Create the middle vertex between two vertices if it doesn't already exist.
+	 * Accesses BSimSphereMesh's hashed midpoint cache to ensure that vertices are
+	 * not duplicated. Symmetry means that multiple faces will share midpoint
+	 * vertices so this saves time and storage.
+	 * @param p1 First vertex index.
+	 * @param p2 Second vertex index.
+	 */
+	protected int getMiddle(int p1, int p2) {
+		// Do we already have this midpoint stored from another face?
+		boolean firstIsSmaller = p1 < p2;
+		long smallerIndex = firstIsSmaller ? p1 : p2;
+		long greaterIndex = firstIsSmaller ? p2 : p1;
+		// Hashtable key composed of the two (ordered) vertex indices.
+		Long key = (smallerIndex << 32) + greaterIndex;
 
-				indices.add(i++, new Vector3i(triangle.x, n1loc, n3loc));
-				indices.add(i++, new Vector3i(n3loc, n1loc, n2loc));
-				indices.add(i++, new Vector3i(n1loc, triangle.y, n2loc));
-				indices.add(i, new Vector3i(n3loc, n2loc, triangle.z));
-			}
+		// If this midpoint is already cached then return its index.
+		if (midPointsCache.containsKey(key)) {
+			i++;
+			return midPointsCache.get(key);
 		}
+
+		// Otherwise, create the midpoint.
+		Vector3d middle = Vector3d.addAndSetLength(vertices.get(p1), vertices.get(p2), radius);
+
+		// Add the midpoint to the mesh vertices.
+		int i = add(middle);
+
+		// Cache the index of the new midpoint.
+		midPointsCache.put(key, i);
+
+		return i;
+	}
+
+	/**
+	 * Removes the old face at index then Adds the 4 new subdivided faces for the old face
+	 * @param face The face to subdivide
+	 * @param index The index to put the 4 new faces into
+	 * @return The index after the new faces have been added
+	 */
+	public int divide(int index) {
+		Vector3i face = faces.get(index).face;
+		int n1loc = getMiddle(face.x, face.y);
+		int n2loc = getMiddle(face.y, face.z);
+		int n3loc = getMiddle(face.z, face.x);
+
+		faces.remove(index);
+
+		faces.add(index++, new Face(new Vector3i(face.x, n1loc, n3loc)));
+		faces.add(index++, new Face(new Vector3i(n3loc, n1loc, n2loc)));
+		faces.add(index++, new Face(new Vector3i(n1loc, face.y, n2loc)));
+		faces.add(index++, new Face(new Vector3i(n3loc, n2loc, face.z)));
+
+		return index;
+	}
+
+	public void reGenerate(Vector3d position, double minDotProduct) {
+		System.out.println("generating...");
+		position = Vector3d.normalise(position);
+		boolean divided = false;
+		for (int i = 0; i < faces.size();) {
+			Vector3i triangle = faces.get(i).face;
+			Vector3d center = Vector3d.sumAndNormalize(vertices.get(triangle.x), vertices.get(triangle.y), vertices.get(triangle.z));
+			if (Vector3d.dot(center, position) >= minDotProduct) {
+				divided = true;
+				i = divide(i);
+			} else i++;
+		}
+		//We weren't able to divide because we are looking to small, so subdivide the most promising one
+		if (!divided) {
+			int bestTriangle = -1;
+			double bestValue = -1.0;
+			for (int i = 0; i < faces.size(); i++) {
+				Vector3i face = faces.get(i).face;
+				Vector3d center = Vector3d.sumAndNormalize(vertices.get(face.x), vertices.get(face.y), vertices.get(face.z));
+				double dot = Vector3d.dot(center, position);
+				if (bestTriangle == -1) {
+					bestTriangle = i;
+					bestValue = dot;
+				} else {//There was other stuff in the map
+					if (dot > bestValue) {
+						bestTriangle = i;
+						bestValue = dot;
+					}
+				}
+			}
+			divide(bestTriangle);
+		}
+
 		for (int i = colors.size(); i < vertices.size(); i++)
 			colors.add(color);
-		this.mesh = getEntireMesh();
+		dataNeedsUpdating = true;
 	}
 
 	private List<Vector3i> getFaces(Vector3f direction, double radius) {
@@ -224,13 +286,35 @@ public class Planet extends Body {
 	}
 
 	private Vao getEntireMesh() {
+
+		if (dataNeedsUpdating) calculateNormals();
+
 		Vao vao = Vao.create();
 		givenVaos.add(vao);
-		vao.createIndexBuffer(ArrayUtil.toIntArrayFromVec3(indices));
-		vao.createAttribute(0, ArrayUtil.toFloatArrayFromVec3d(vertices), 3, false, "positions");
-		vao.createAttribute(1, ArrayUtil.toFloatArrayFromVec3f(colors), 3, false, "colors");
+		vao.createIndexBuffer(LoaderUtils.createIndices(faces));
+		vao.createAttribute(0, LoaderUtils.createDataBufferFloat(vertices), 3, false, "positions");
+		vao.createAttribute(1, LoaderUtils.createDataBuffer(colors), 3, false, "colors");
+		vao.createAttribute(2, LoaderUtils.createDataBuffer(normals), 3, false, "normals");
 
 		return vao;
+	}
+
+	private void calculateNormals() {
+		normals = new ArrayList<Vector3f>(vertices.size());
+		for (int i = 0; i < vertices.size(); i++)
+			normals.add(new Vector3f());
+
+		for (Face face : faces) {
+			Vector3f normal = Maths.calculateNormalFloat(vertices.get(face.face.x), vertices.get(face.face.y), vertices.get(face.face.z));
+			normals.get(face.face.x).add(normal);
+			normals.get(face.face.y).add(normal);
+			normals.get(face.face.z).add(normal);
+		}
+
+		for (int i = 0; i < normals.size(); i++)
+			normals.get(i).normalise();
+
+		dataNeedsUpdating = false;
 	}
 
 	public void cleanUp() {
@@ -268,6 +352,13 @@ public class Planet extends Body {
 
 	public Vao getMesh() {
 		return mesh;
+	}
+
+	public void compress() {
+		this.mesh = getEntireMesh();
+		vertices.trimToSize();
+		faces.trimToSize();
+		colors.trimToSize();
 	}
 
 }

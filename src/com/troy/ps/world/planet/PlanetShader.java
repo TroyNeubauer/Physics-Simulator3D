@@ -12,10 +12,14 @@ public class PlanetShader extends ShaderProgram {
 	protected UniformMatrix viewMatrix = new UniformMatrix("viewMatrix");
 
 	protected UniformMatrix modelMatrix = new UniformMatrix("modelMatrix");
+	
+	protected UniformVec3 lightPos = new UniformVec3("lightPos");
+	
+	protected UniformVec3 lightColor = new UniformVec3("lightColor");
 
 	public PlanetShader() {
-		super(VERT_FILE, FRAG_FILE, "position", "color");
-		super.storeAllUniformLocations(projectionMatrix, viewMatrix, modelMatrix);
+		super(VERT_FILE, FRAG_FILE, "position", "color", "normal");
+		super.storeAllUniformLocations(projectionMatrix, viewMatrix, modelMatrix, lightPos, lightColor);
 	}
 
 }

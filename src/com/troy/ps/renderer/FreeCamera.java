@@ -7,7 +7,7 @@ import com.troyberry.opengl.util.*;
 
 public class FreeCamera implements ICamera {
 
-	private SmoothFloat speed = new SmoothFloat(10.0f, 5.0f);
+	private SmoothFloat speed = new SmoothFloat(0.01f, 5.0f);
 	private float near, far;
 	private Vector3f position;
 	private Vector3f forward, right, up;
@@ -22,8 +22,8 @@ public class FreeCamera implements ICamera {
 		this.fov = fov;
 		this.position = new Vector3f(0, 0, 0);
 
-		this.near = Constants.ONE_METER * 5;
-		this.far = Constants.ONE_HUNDRED_MILLION_KILOMETERS;
+		this.near = Constants.ONE_CENTIMETER;
+		this.far = Constants.ONE_MILLION_KILOMETERS;
 		updateProjectionMatrix(window);
 		updateViewMatrix();
 	}

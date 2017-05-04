@@ -35,10 +35,11 @@ public class PhysicsSimulator implements Runnable {
 	 * Starts the game: initializes the canvas, the title, the settings, etc.
 	 */
 	public void startGame() throws Exception {
+		
+		boolean fullscreen = false;
 		VersionManager.setVersion(new Version());
 		GLUtil.init();
-		window = new Window(1280, 720);
-		window.setSwapInterval(1);
+		window = fullscreen ? new Window() : new Window(1440, 810);
 		GL11.glClearColor(1, 1, 1, 1);
 		window.setClearColor(1, 1, 1);
 		window.enableFPSInTitle();

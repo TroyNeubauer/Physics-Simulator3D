@@ -8,7 +8,7 @@ public class Controls {
 										LEFT = new KeyBinding(Keyboard.KEY_A), 			RIGHT = new KeyBinding(Keyboard.KEY_D), 
 										UP = new KeyBinding(Keyboard.KEY_SPACE), 		DOWN = new KeyBinding(Keyboard.KEY_LEFT_SHIFT), 
 										ROTATE_LEFT = new KeyBinding(Keyboard.KEY_Q),	ROTATE_RIGHT = new KeyBinding(Keyboard.KEY_E), 	
-										POLYGON = new KeyBinding(Keyboard.KEY_G);
+										POLYGON = new KeyBinding(Keyboard.KEY_G), 		BACK_FACE_CULL = new KeyBinding(Keyboard.KEY_C);
 	public static final MouseBinding 	LOOK = new MouseBinding(0);
 
 }
