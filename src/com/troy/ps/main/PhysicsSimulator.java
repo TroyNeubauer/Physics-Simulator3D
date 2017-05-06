@@ -36,7 +36,7 @@ public class PhysicsSimulator implements Runnable {
 	 */
 	public void startGame() throws Exception {
 		
-		boolean fullscreen = false;
+		boolean fullscreen = true;
 		VersionManager.setVersion(new Version());
 		GLUtil.init();
 		window = fullscreen ? new Window() : new Window(1440, 810);

@@ -14,7 +14,7 @@ public class Constants {
 	
 	
 	//Distances
-	private static final double METER = 0.001;//Only hardcoded value
+	private static final double METER = 10;//Only hardcoded value
 	private static final double LIGHT_YEAR = 			METER * 9.460731e+15;
 
 	public static final float ONE_METER = 						(float) (METER * 1.0);

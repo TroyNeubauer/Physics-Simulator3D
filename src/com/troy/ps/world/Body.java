@@ -4,13 +4,13 @@ import com.troyberry.math.*;
 
 public class Body {
 
-	protected Vector3f position;
-	protected Vector3f velocity;
-	protected Vector3f rotation, rotationVelocity;
+	protected Vector3d position;
+	protected Vector3d velocity;
+	protected Vector3d rotation, rotationVelocity;
 	
-	private float mass, furthestPoint;
+	private double mass, furthestPoint;
 
-	public Body(Vector3f position, Vector3f velocity, Vector3f rotation, Vector3f rotationVelocity) {
+	public Body(Vector3d position, Vector3d velocity, Vector3d rotation, Vector3d rotationVelocity) {
 		this.position = position;
 		this.velocity = velocity;
 		this.rotation = rotation;
@@ -22,39 +22,39 @@ public class Body {
 		this.rotation.addScaled(rotationVelocity, delta);
 	}
 	
-	public Vector3f getPosition() {
+	public Vector3d getPosition() {
 		return position;
 	}
 
-	public void setPosition(Vector3f position) {
+	public void setPosition(Vector3d position) {
 		this.position = position;
 	}
 
-	public Vector3f getVelocity() {
+	public Vector3d getVelocity() {
 		return velocity;
 	}
 
-	public void setVelocity(Vector3f velocity) {
+	public void setVelocity(Vector3d velocity) {
 		this.velocity = velocity;
 	}
 
-	public Vector3f getRotation() {
+	public Vector3d getRotation() {
 		return rotation;
 	}
 
-	public void setRotation(Vector3f rotation) {
+	public void setRotation(Vector3d rotation) {
 		this.rotation = rotation;
 	}
 
-	public Vector3f getRotationVelocity() {
+	public Vector3d getRotationVelocity() {
 		return rotationVelocity;
 	}
 
-	public void setRotationVelocity(Vector3f rotationVelocity) {
+	public void setRotationVelocity(Vector3d rotationVelocity) {
 		this.rotationVelocity = rotationVelocity;
 	}
 
-	public float getMass() {
+	public double getMass() {
 		return mass;
 	}
 
@@ -62,7 +62,7 @@ public class Body {
 		this.mass = mass;
 	}
 	
-	public float getFurthestPoint() {
+	public double getFurthestPoint() {
 		return furthestPoint;
 	}
 

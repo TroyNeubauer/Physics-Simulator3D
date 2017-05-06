@@ -7,48 +7,47 @@ import com.troyberry.opengl.util.*;
 
 public class FreeCamera implements ICamera {
 
-	private SmoothFloat speed = new SmoothFloat(0.01f, 5.0f);
-	private float near, far;
-	private Vector3f position;
-	private Vector3f forward, right, up;
+	private SmoothDouble speed = new SmoothDouble(100, 5.0);
+	private double near, far;
+	private Vector3d position;
+	private Vector3d forward, right, up;
 
-	private Matrix4f projectionMatrix, viewMatrix;
-	private float fov;
+	private Matrix4d projectionMatrix, viewMatrix;
+	private double fov;
 
 	public FreeCamera(Window window, float fov) {
-		this.right = new Vector3f(1, 0, 0);
-		this.up = new Vector3f(0, 1, 0);
-		this.forward = new Vector3f(0, 0, 1);
+		this.right = new Vector3d(1, 0, 0);
+		this.up = new Vector3d(0, 1, 0);
+		this.forward = new Vector3d(0, 0, 1);
 		this.fov = fov;
-		this.position = new Vector3f(0, 0, 0);
+		this.position = new Vector3d(0, 0, 0);
 
-		this.near = Constants.ONE_KILOMETER;
+		this.near = Constants.ONE_METER * 10;
 		this.far = Constants.ONE_HUNDRED_MILLION_KILOMETERS;
 		updateProjectionMatrix(window);
 		updateViewMatrix();
 	}
 
 	private boolean wireFrame = false, mouseControl;
-	Vector3f total = new Vector3f();
+	Vector3d total = new Vector3d();
 
-	private Vector3f checkInputs(float delta) {
+	private Vector3d checkInputs(double delta) {
 		total.set(0.0f, 0.0f, 0.0f);
 
-		if (Controls.FORWARD.isPressed()) total.add(Vector3f.negate(forward));
+		if (Controls.FORWARD.isPressed()) total.add(Vector3d.negate(forward));
 		if (Controls.BACKWARD.isPressed()) total.add(forward);
 
-		if (Controls.LEFT.isPressed()) total.add(Vector3f.negate(right));
+		if (Controls.LEFT.isPressed()) total.add(Vector3d.negate(right));
 		if (Controls.RIGHT.isPressed()) total.add(right);
 
 		if (Controls.UP.isPressed()) total.add(up);
-		if (Controls.DOWN.isPressed()) total.add(Vector3f.negate(up));
+		if (Controls.DOWN.isPressed()) total.add(Vector3d.negate(up));
 		if (Mouse.hasScrolled()) {
 			speed.setTarget(speed.getTarget() + speed.getTarget() * (Mouse.getDWheel() * 30) * Window.getFrameTimeSeconds());
 			speed.clamp(0.0000005f, 2500000f);
 			Mouse.resetScroll();
 		}
 		speed.update(delta);
-		speed.clamp(0.000000001f, 100000f);
 
 		total.setLength(delta * speed.get());
 
@@ -79,20 +78,20 @@ public class FreeCamera implements ICamera {
 		updateViewMatrix();
 	}
 
-	public void rotateHorizontal(float degrees) {
-		float radins = Maths.degreesToRadians(degrees);
+	public void rotateHorizontal(double degrees) {
+		double radins = Math.toRadians(degrees);
 		forward.rotate(up, radins);
 		right.rotate(up, radins);
 	}
 
-	public void rotateVertical(float degrees) {
-		float radins = Maths.degreesToRadians(degrees);
+	public void rotateVertical(double degrees) {
+		double radins = Math.toRadians(degrees);
 		forward.rotate(right, radins);
 		up.rotate(right, radins);
 	}
 
-	public void rotateAround(float degrees) {
-		float radins = Maths.degreesToRadians(degrees);
+	public void rotateAround(double degrees) {
+		double radins = Math.toRadians(degrees);
 		right.rotate(forward, radins);
 		up.rotate(forward, radins);
 	}
@@ -107,41 +106,6 @@ public class FreeCamera implements ICamera {
 		this.projectionMatrix = GLMaths.createPerspectiveProjectionMatrix(window.getWidth(), window.getHeight(), near, far, fov);
 	}
 
-	@Override
-	public Matrix4f getProjectionMatrix() {
-		return projectionMatrix;
-	}
-
-	@Override
-	public Matrix4f getProjectionViewMatrix() {
-		return Matrix4f.multiply(projectionMatrix, viewMatrix);
-	}
-
-	@Override
-	public Matrix4f getViewMatrix() {
-		if (viewMatrix == null) updateViewMatrix();
-		return viewMatrix;
-	}
-
-	@Override
-	public Matrix4f getViewMatrix(Vector3f pos) {
-		return GLMaths.createViewMatrix(pos, forward, right, up);
-	}
-
-	@Override
-	public Vector3f getPosition() {
-		return position;
-	}
-
-	@Override
-	public void setPosition(Vector3f newPosition) {
-		this.position.set(newPosition);
-	}
-
-	@Override
-	public void setPotition(float x, float y, float z) {
-		this.position.set(x, y, z);
-	}
 
 	@Override
 	public boolean hasNearPlane() {
@@ -149,45 +113,105 @@ public class FreeCamera implements ICamera {
 	}
 
 	@Override
-	public float getNearPlane() {
-		return near;
-	}
-
-	@Override
 	public boolean hasFarPlane() {
-		return false;
+		return true;
 	}
 
-	@Override
-	public float getFarPlane() {
-		return -1;
-	}
 
 	@Override
-	public Vector3f getUpVector() {
-		return up;
-	}
-
-	@Override
-	public Vector3f getForwardVector() {
-		return forward;
-	}
-
-	@Override
-	public Vector3f getRightVector() {
-		return right;
-	}
-
-	@Override
-	public void move(float delta) {
+	public void move(double delta) {
 		this.position.add(checkInputs(delta));
 	}
 
 	@Override
-	public void setUpDirection(Vector3f newUp) {
-		this.up = Vector3f.normalise(newUp);
-		this.right = Vector3f.arbitraryOrthogonal(up);
-		this.forward = Vector3f.cross(right, up);
+	public void setUpDirectionDouble(Vector3d newUp) {
+		this.up = Vector3d.normalise(newUp);
+		this.right = Vector3d.arbitraryOrthogonal(up);
+		this.forward = Vector3d.cross(right, up);
+	}
+	@Override
+	public void setUpDirectionFloat(Vector3f newUp) {
+		setUpDirectionDouble(newUp.toDouble());
+	}
+
+	@Override
+	public Matrix getProjectionMatrix() {
+		return projectionMatrix;
+	}
+
+	@Override
+	public Matrix getProjectionViewMatrix() {
+		return Matrix4d.multiply(projectionMatrix, viewMatrix);
+	}
+
+	@Override
+	public Matrix getViewMatrix() {
+		return viewMatrix;
+	}
+
+	@Override
+	public Vector3f getUpVectorFloat() {
+		return up.toFloat();
+	}
+
+	@Override
+	public Vector3f getForwardVectorFloat() {
+		return forward.toFloat();
+	}
+
+	@Override
+	public Vector3f getRightVectorFloat() {
+		return right.toFloat();
+	}
+
+	@Override
+	public Vector3d getUpVectorDouble() {
+		return up;
+	}
+
+	@Override
+	public Vector3d getForwardVectorDouble() {
+		return forward;
+	}
+
+	@Override
+	public Vector3d getRightVectorDouble() {
+		return right;
+	}
+
+	@Override
+	public Vector3f getPositionFloat() {
+		return position.toFloat();
+	}
+
+	@Override
+	public Vector3d getPositionDouble() {
+		return position;
+	}
+
+	@Override
+	public void setPosition(double x, double y, double z) {
+		this.position.set(x, y, z);
+	}
+
+	@Override
+	public double getNearPlane() {
+		return near;
+	}
+
+	@Override
+	public double getFarPlane() {
+		return far;
+	}
+
+	@Override
+	public void setPosition(Vector3d vec) {
+		this.position.set(vec);
+	}
+
+	@Override
+	public void setPosition(Vector3f vec) {
+		this.position.set(vec);
 	}
 
 }

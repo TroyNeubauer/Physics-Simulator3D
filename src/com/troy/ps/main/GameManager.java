@@ -24,13 +24,12 @@ public class GameManager implements GameState {
 		Mouse.setGrabbed(true);
 		renderer = new MasterRenderer(window);
 		camera = new FreeCamera(window, 70);
-		camera.setPosition(new Vector3f(0, 0, 15));
 		//OpenCLManager.forceUpdate();
-		planet = new Planet(new Vector3f(0, 0, 0), new Random().nextLong(), 0);
-		Vector3f[] vecs = planet.findSutableSpawnLocation();
+		planet = new Planet(new Vector3d(0, 0, 0), new Random().nextLong(), 0);
+		Vector3d[] vecs = planet.findSutableSpawnLocation();
 		camera.setPosition(vecs[0]);
-		camera.setUpDirection(vecs[1]);
-		planet.reGenerate(vecs[1].toDouble(), Constants.TEN_THOUSAND_KILOMETERS, 10);
+		camera.setUpDirectionDouble(vecs[1]);
+		planet.reGenerate(vecs[1], Constants.ONE_KILOMETER, Constants.ONE_METER * 20);
 
 		planet.compress();
 	}

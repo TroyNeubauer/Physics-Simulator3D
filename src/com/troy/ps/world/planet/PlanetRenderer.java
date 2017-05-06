@@ -39,12 +39,13 @@ public class PlanetRenderer {
 		shader.start();
 		shader.projectionMatrix.loadMatrix(camera.getProjectionMatrix());
 		shader.viewMatrix.loadMatrix(camera.getViewMatrix());
-		Vector3f rot = planet.getRotation();
+		Vector3d rot = planet.getRotation();
 		shader.modelMatrix
-				.loadMatrix(Matrix4f.multiply(GLMaths.createTransformationMatrix(planet.getPosition()), GLMaths.createRotationMatrix(rot.x, rot.y, rot.z)));
+				.loadMatrix(Matrix4d.multiply(GLMaths.createTransformationMatrix(planet.getPosition()), GLMaths.createRotationMatrix(rot.x, rot.y, rot.z)));
 		shader.lightPos.loadVec3(light.getPosition());
 		shader.lightColor.loadVec3(light.getColor());
-		shader.ambientLighting.loadVec3(0.2f);
+		shader.ambientLighting.loadVec3(0.1f);
+		shader.enableLighting.loadBoolean(false);
 		GLUtil.disableBlending();
 		GLUtil.enableDepthTesting();
 		GLUtil.cullBackFaces(cull);

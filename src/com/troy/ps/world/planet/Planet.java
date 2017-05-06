@@ -35,7 +35,7 @@ public class Planet extends Body {
 	private Hashtable<Long, Integer> midPointsCache;
 
 	private ArrayList<Vector3d> vertices;
-	private ArrayList<Face> faces;
+	private ArrayList<IcosphereFace> faces;
 	private ArrayList<Vector3f> colors;
 	private ArrayList<Vector3f> normals;
 
@@ -48,23 +48,23 @@ public class Planet extends Body {
 	private SimplexNoise noise;
 	private Vao mesh;
 
-	private float radius, rockeyness, maxMountain;
+	private double radius, rockeyness, maxMountain;
 
-	public Planet(Vector3f position, long seed, int initalRecursion) {
-		this(position, new Vector3f(), new Vector3f(), new Vector3f(), seed, initalRecursion);
+	public Planet(Vector3d position, long seed, int initalRecursion) {
+		this(position, new Vector3d(), new Vector3d(), new Vector3d(), seed, initalRecursion);
 	}
 
-	public Planet(Vector3f position, Vector3f velocity, Vector3f rotation, Vector3f rotationVelocity, long seed, int initalRecursion) {
+	public Planet(Vector3d position, Vector3d velocity, Vector3d rotation, Vector3d rotationVelocity, long seed, int initalRecursion) {
 		super(position, velocity, rotation, rotationVelocity);
-		this.radius = Maths.randRange(Constants.TEN_KILOMETERS, Constants.ONE_THOUSAND_KILOMETERS * 30.0f);//between 10KM and 15,000KM
+		this.radius = Maths.randRange((double) Constants.TEN_KILOMETERS, Constants.ONE_THOUSAND_KILOMETERS * 30.0f);//between 10KM and 15,000KM
 		this.rockeyness = Maths.randRange(0.5f, 1.6f);
 		this.midPointsCache = new Hashtable<Long, Integer>(25 * Maths.pow(4, initalRecursion), 0.8f);
 		this.vertices = new ArrayList<Vector3d>(getVertexCount(initalRecursion));
-		this.faces = new ArrayList<Face>(20 * Maths.pow(4, initalRecursion));
+		this.faces = new ArrayList<IcosphereFace>(20 * Maths.pow(4, initalRecursion));
 		this.givenVaos = new ArrayList<Vao>();
 		this.seed = seed;
 
-		this.maxMountain = Math.abs(Maths.randRangeFloat(planetRadiusToMountainHeightMultaplier.getValue(radius)));
+		this.maxMountain = Math.abs(Maths.randRange(planetRadiusToMountainHeightMultaplier.getValue(radius)));
 		System.out.println("radius " + Constants.getDistanceText(radius) + ", max Mt." + Constants.getDistanceText(maxMountain) + ", rockeyness " + rockeyness);
 		this.noise = new SimplexNoise(maxMountain, rockeyness, seed);
 
@@ -78,20 +78,20 @@ public class Planet extends Body {
 	}
 
 	public void update(float delta) {
-		this.position.add(Vector3f.scale(velocity, delta));
-		this.rotation.add(Vector3f.scale(rotationVelocity, delta));
+		this.position.add(Vector3d.scale(velocity, delta));
+		this.rotation.add(Vector3d.scale(rotationVelocity, delta));
 	}
 
-	public Vector3f[] findSutableSpawnLocation() {
-		Vector3f[] result = new Vector3f[2];
+	public Vector3d[] findSutableSpawnLocation() {
+		Vector3d[] result = new Vector3d[2];
 		double a = Maths.randRange(-Math.PI, Math.PI);
 		double b = Maths.randRange(-Math.PI / 2.0, Math.PI / 2.0);
-		result[1] = new Vector3f(radius * Maths.cosFloat(b) * Maths.sinFloat(a), radius * Maths.cosFloat(b) * Maths.cosFloat(a), radius * Maths.sinFloat(b));
+		result[1] = new Vector3d(radius * Maths.cosFloat(b) * Maths.sinFloat(a), radius * Maths.cosFloat(b) * Maths.cosFloat(a), radius * Maths.sinFloat(b));
 
-		result[1] = new Vector3f(0, 1 * radius, 0);
+		result[1] = new Vector3d(0, radius, 0, radius);
 
-		result[0] = Vector3f.add(result[1], position);
-		result[0] = Vector3f.addLength(result[0], Constants.ONE_METER);
+		result[0] = Vector3d.add(result[1], position);
+		result[0] = Vector3d.addLength(result[0], Constants.ONE_METER);
 		result[1].normalise();
 		return result;
 	}
@@ -131,32 +131,32 @@ public class Planet extends Body {
 		// create 20 triangles of the icosahedron
 
 		// 5 indices around point 0
-		faces.add(new Face(new Vector3i(0, 11, 5)));
-		faces.add(new Face(new Vector3i(0, 5, 1)));
-		faces.add(new Face(new Vector3i(0, 1, 7)));
-		faces.add(new Face(new Vector3i(0, 7, 10)));
-		faces.add(new Face(new Vector3i(0, 10, 11)));
+		faces.add(new IcosphereFace(new Vector3i(0, 11, 5), 1));
+		faces.add(new IcosphereFace(new Vector3i(0, 5, 1), 1));
+		faces.add(new IcosphereFace(new Vector3i(0, 1, 7), 1));
+		faces.add(new IcosphereFace(new Vector3i(0, 7, 10), 1));
+		faces.add(new IcosphereFace(new Vector3i(0, 10, 11), 1));
 
 		// 5 adjacent indices 
-		faces.add(new Face(new Vector3i(1, 5, 9)));
-		faces.add(new Face(new Vector3i(5, 11, 4)));
-		faces.add(new Face(new Vector3i(11, 10, 2)));
-		faces.add(new Face(new Vector3i(10, 7, 6)));
-		faces.add(new Face(new Vector3i(7, 1, 8)));
+		faces.add(new IcosphereFace(new Vector3i(1, 5, 9), 1));
+		faces.add(new IcosphereFace(new Vector3i(5, 11, 4), 1));
+		faces.add(new IcosphereFace(new Vector3i(11, 10, 2), 1));
+		faces.add(new IcosphereFace(new Vector3i(10, 7, 6), 1));
+		faces.add(new IcosphereFace(new Vector3i(7, 1, 8), 1));
 
 		// 5 indices around point 3
-		faces.add(new Face(new Vector3i(3, 9, 4)));
-		faces.add(new Face(new Vector3i(3, 4, 2)));
-		faces.add(new Face(new Vector3i(3, 2, 6)));
-		faces.add(new Face(new Vector3i(3, 6, 8)));
-		faces.add(new Face(new Vector3i(3, 8, 9)));
+		faces.add(new IcosphereFace(new Vector3i(3, 9, 4), 1));
+		faces.add(new IcosphereFace(new Vector3i(3, 4, 2), 1));
+		faces.add(new IcosphereFace(new Vector3i(3, 2, 6), 1));
+		faces.add(new IcosphereFace(new Vector3i(3, 6, 8), 1));
+		faces.add(new IcosphereFace(new Vector3i(3, 8, 9), 1));
 
 		// 5 adjacent indices 
-		faces.add(new Face(new Vector3i(4, 9, 5)));
-		faces.add(new Face(new Vector3i(2, 4, 11)));
-		faces.add(new Face(new Vector3i(6, 2, 10)));
-		faces.add(new Face(new Vector3i(8, 6, 7)));
-		faces.add(new Face(new Vector3i(9, 8, 1)));
+		faces.add(new IcosphereFace(new Vector3i(4, 9, 5), 1));
+		faces.add(new IcosphereFace(new Vector3i(2, 4, 11), 1));
+		faces.add(new IcosphereFace(new Vector3i(6, 2, 10), 1));
+		faces.add(new IcosphereFace(new Vector3i(8, 6, 7), 1));
+		faces.add(new IcosphereFace(new Vector3i(9, 8, 1), 1));
 
 		for (int i = 0; i < initalRecursion; i++) {
 			for (int index = 0; index < faces.size();) {
@@ -191,13 +191,13 @@ public class Planet extends Body {
 	/**
 	 * Create the middle vertex between two vertices if it doesn't already exist.
 	 * Accesses BSimSphereMesh's hashed midpoint cache to ensure that vertices are
-	 * not duplicated. Symmetry means that multiple faces will share midpoint
+	 * not duplicated. Symmetry means that multiple IcosphereFaces will share midpoint
 	 * vertices so this saves time and storage.
 	 * @param p1 First vertex index.
 	 * @param p2 Second vertex index.
 	 */
 	protected int getMiddle(int p1, int p2) {
-		// Do we already have this midpoint stored from another face?
+		// Do we already have this midpoint stored from another IcosphereFace?
 		boolean firstIsSmaller = p1 < p2;
 		long smallerIndex = firstIsSmaller ? p1 : p2;
 		long greaterIndex = firstIsSmaller ? p2 : p1;
@@ -223,55 +223,82 @@ public class Planet extends Body {
 	}
 
 	/**
-	 * Removes the old face at index then Adds the 4 new subdivided faces for the old face
-	 * @param face The face to subdivide
-	 * @param index The index to put the 4 new faces into
-	 * @return The index after the new faces have been added
+	 * Removes the old IcosphereFace at index then Adds the 4 new subdivided IcosphereFaces for the old IcosphereFace
+	 * @param IcosphereFace The IcosphereFace to subdivide
+	 * @param index The index to put the 4 new IcosphereFaces into
+	 * @return The index after the new IcosphereFaces have been added
 	 */
 	public int divide(int index) {
-		Vector3i face = faces.get(index).face;
-		int n1loc = getMiddle(face.x, face.y);
-		int n2loc = getMiddle(face.y, face.z);
-		int n3loc = getMiddle(face.z, face.x);
+		IcosphereFace face = faces.get(index);
+		int n1loc = getMiddle(face.face.x, face.face.y);
+		int n2loc = getMiddle(face.face.y, face.face.z);
+		int n3loc = getMiddle(face.face.z, face.face.x);
 
 		faces.remove(index);
-
-		faces.add(index++, new Face(new Vector3i(face.x, n1loc, n3loc)));
-		faces.add(index++, new Face(new Vector3i(n3loc, n1loc, n2loc)));
-		faces.add(index++, new Face(new Vector3i(n1loc, face.y, n2loc)));
-		faces.add(index++, new Face(new Vector3i(n3loc, n2loc, face.z)));
+		int newIndex = face.getRecursionIndex() + 1;
+		faces.add(index++, new IcosphereFace(new Vector3i(face.face.x, n1loc, n3loc), newIndex));
+		faces.add(index++, new IcosphereFace(new Vector3i(n3loc, n1loc, n2loc), newIndex));
+		faces.add(index++, new IcosphereFace(new Vector3i(n1loc, face.face.y, n2loc), newIndex));
+		faces.add(index++, new IcosphereFace(new Vector3i(n3loc, n2loc, face.face.z), newIndex));
 
 		return index;
 	}
 
-	public void reGenerate(Vector3d position, double minDistance, int times) {
+	public void reGenerate(Vector3d direction, double minDistance, double minTriangleEdgeLength) {
+		Vector3d pos = Vector3d.setLength(direction, radius);
+		direction.normalise();
 		System.out.println("generating...");
-		position = Vector3d.normalise(position);
-		List<Face> localFaces = new ArrayList<Face>();
-		for (Face face : faces) {
-			System.out.println("checking face");
-			double distance = Maths.minTriangleDistance(vertices.get(face.face.x), vertices.get(face.face.y), vertices.get(face.face.z), position);
-			if (distance <= minDistance) {
-				System.out.println("loading inital face");
+		List<IcosphereFace> localFaces = new ArrayList<IcosphereFace>();
+		List<Integer> localIcosphereFacesToRemove = new ArrayList<Integer>();
+		for (int i = 0; i < faces.size(); i++) {
+			IcosphereFace face = faces.get(i);
+			if (Maths.rayTriangleIntersect(position, direction, vertices.get(face.face.x), vertices.get(face.face.y), vertices.get(face.face.z))) {
 				localFaces.add(face);
+				localIcosphereFacesToRemove.add(i);
 			}
-
 		}
-		for(int time = 0; time < times; time++) {
-			for(int i = 0; i < localFaces.size(); i++) {
-				Face face = localFaces.get(i);
-				double distance = Maths.minTriangleDistance(vertices.get(face.face.x), vertices.get(face.face.y), vertices.get(face.face.z), position);
-				if (distance <= minDistance) {
+		for (int i = colors.size(); i < vertices.size(); i++)
+			colors.add(color);
+		for (IcosphereFace IcosphereFace : localFaces) {
+			colors.set(IcosphereFace.face.x, new Vector3f(0, 1, 1));
+			colors.set(IcosphereFace.face.y, new Vector3f(0, 1, 1));
+			colors.set(IcosphereFace.face.z, new Vector3f(0, 1, 1));
+		}
+		System.out.println("Inital IcosphereFaces: " + localFaces);
+		boolean breakOut = false;
+		while (true) {
+			for (int i = 0; i < localFaces.size(); i++) {
+				IcosphereFace face = localFaces.get(i);
+				Vector3d p1 = vertices.get(face.face.x);
+				Vector3d p2 = vertices.get(face.face.y);
+				Vector3d p3 = vertices.get(face.face.z);
+				if(Maths.getDistanceBetweenPoints(p1, p2) < minTriangleEdgeLength) {
+					breakOut = true;
+					break;
+				}
+
+				if (Maths.rayTriangleIntersect(position, direction, p1, p2, p3) || (Maths.minTriangleDistance(p1, p2, p3, pos) < minDistance)) {
 					int n1loc = getMiddle(face.face.x, face.face.y);
 					int n2loc = getMiddle(face.face.y, face.face.z);
 					int n3loc = getMiddle(face.face.z, face.face.x);
 
 					localFaces.remove(i);
-
-					localFaces.add(i++, new Face(new Vector3i(face.face.x, n1loc, n3loc)));
-					localFaces.add(i++, new Face(new Vector3i(n3loc, n1loc, n2loc)));
-					localFaces.add(i++, new Face(new Vector3i(n1loc, face.face.y, n2loc)));
-					localFaces.add(i, new Face(new Vector3i(n3loc, n2loc, face.face.z)));
+					int newIndex = face.getRecursionIndex() + 1;
+					localFaces.add(i++, new IcosphereFace(new Vector3i(face.face.x, n1loc, n3loc), newIndex));
+					localFaces.add(i++, new IcosphereFace(new Vector3i(n3loc, n1loc, n2loc), newIndex));
+					localFaces.add(i++, new IcosphereFace(new Vector3i(n1loc, face.face.y, n2loc), newIndex));
+					localFaces.add(i, new IcosphereFace(new Vector3i(n3loc, n2loc, face.face.z), newIndex));
+				}
+			}
+			if(breakOut) break;
+		}
+		for (int i = 0; i < localIcosphereFacesToRemove.size(); i++) {
+			int index = localIcosphereFacesToRemove.get(i);
+			faces.remove(index);
+			for (int j = i + 1; j < localIcosphereFacesToRemove.size(); j++) {
+				int otherIndex = localIcosphereFacesToRemove.get(j);
+				if (otherIndex > index) {
+					localIcosphereFacesToRemove.set(j, otherIndex - 1);
 				}
 			}
 		}
@@ -282,7 +309,7 @@ public class Planet extends Body {
 		dataNeedsUpdating = true;
 	}
 
-	private List<Vector3i> getFaces(Vector3f direction, double radius) {
+	private List<Vector3i> getIcosphereFaces(Vector3d direction, double radius) {
 		List<Vector3i> result = new ArrayList<Vector3i>();
 		return result;
 	}
@@ -306,11 +333,11 @@ public class Planet extends Body {
 		for (int i = 0; i < vertices.size(); i++)
 			normals.add(new Vector3f());
 
-		for (Face face : faces) {
-			Vector3f normal = Maths.calculateNormalFloat(vertices.get(face.face.x), vertices.get(face.face.y), vertices.get(face.face.z));
-			normals.get(face.face.x).add(normal);
-			normals.get(face.face.y).add(normal);
-			normals.get(face.face.z).add(normal);
+		for (IcosphereFace IcosphereFace : faces) {
+			Vector3f normal = Maths.calculateNormalFloat(vertices.get(IcosphereFace.face.x), vertices.get(IcosphereFace.face.y), vertices.get(IcosphereFace.face.z));
+			normals.get(IcosphereFace.face.x).add(normal);
+			normals.get(IcosphereFace.face.y).add(normal);
+			normals.get(IcosphereFace.face.z).add(normal);
 		}
 
 		for (int i = 0; i < normals.size(); i++)
@@ -348,7 +375,7 @@ public class Planet extends Body {
 		return 10000;
 	}
 
-	public float getRadius() {
+	public double getRadius() {
 		return radius;
 	}
 
