@@ -24,7 +24,7 @@ public class GameStateManager {
 	 */
 	public static void endState(GameState state) {
 		if (state == nextGameState) {
-			state.cleanUp();
+			state.delete();
 			nextGameState = null;
 		}
 	}
@@ -76,7 +76,7 @@ public class GameStateManager {
 	}
 
 	private static void changeState(Window window, GameState state) {
-		if (currentGameState != null) currentGameState.cleanUp();
+		if (currentGameState != null) currentGameState.delete();
 		currentGameState = state;
 		nextGameState = state;
 		if (currentGameState != null) {
@@ -91,7 +91,7 @@ public class GameStateManager {
 	 * Cleans up the current game state
 	 */
 	public static void cleanUp() {
-		if (currentGameState != null) currentGameState.cleanUp();
+		if (currentGameState != null) currentGameState.delete();
 	}
 
 }

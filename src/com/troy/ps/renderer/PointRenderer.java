@@ -39,7 +39,7 @@ public class PointRenderer {
 		this.shader.stop();
 	}
 
-	public void cleanUp() {
-		this.shader.cleanUp();
+	public void delete() {
+		this.shader.delete();
 	}
 }

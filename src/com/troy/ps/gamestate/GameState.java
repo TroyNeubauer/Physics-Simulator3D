@@ -10,5 +10,5 @@ public interface GameState {
 	
 	public void update(float delta, Window window);
 	
-	public void cleanUp();
+	public void delete();
 }

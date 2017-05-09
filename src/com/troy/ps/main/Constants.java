@@ -10,12 +10,11 @@ public class Constants {
 	static {
 		df.setRoundingMode(RoundingMode.UP);
 	}
-	
-	
-	
-	//Distances
+
+	// Distances
+	//format:off
 	private static final double METER = 10;//Only hardcoded value
-	private static final double LIGHT_YEAR = 			METER * 9.460731e+15;
+	private static final double LIGHT_YEAR = 							 METER * 9.460731e+15;
 
 	public static final float ONE_METER = 						(float) (METER * 1.0);
 	public static final float TEN_METERS = 						(float) (METER * 10.0);
@@ -41,20 +40,21 @@ public class Constants {
 	public static final float TEN_NANOMETERS = 					(float) (METER / 100000000.0);
 	public static final float ONE_NANOMETER = 					(float) (METER / 1000000000.0);
 	
-	public static final double PLANK_LENGTH = 				METER * 1.61622938e-35;//Double because the value is so small...
+	public static final double PLANK_LENGTH = 					METER * 1.61622938e-35;//Double because the value is so small...
 	
 	public static final float ONE_LIGHT_YEAR = 					(float) (LIGHT_YEAR * 1.0);
 	public static final float TEN_LIGHT_YEARS = 				(float) (LIGHT_YEAR * 10.0);
 	public static final float ONE_HUNDRED_LIGHT_YEARS = 		(float) (LIGHT_YEAR * 100.0);
-	
+	//format:on
+
 	public static String getSpeed(Vector3d vec, String unit) {
 		return getSpeed(vec.length(), unit);
 	}
-	
+
 	public static String getSpeed(Vector3f vec, String unit) {
-		return getSpeed(StrictMath.sqrt(vec.lengthSquared()), unit);//Don't call length() because the cast to float looses precision
+		return getSpeed(StrictMath.sqrt(vec.lengthSquared()), unit);// Don't call length() because the cast to float looses precision
 	}
-	
+
 	public static String getSpeed(double speed, String unit) {
 		return getDistanceText(speed) + " per " + unit;
 	}

@@ -3,10 +3,11 @@ package com.troy.ps.world.planet;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 
-import com.troy.ps.main.*;
-import com.troy.ps.world.*;
+import com.troy.ps.main.Controls;
+import com.troy.ps.world.Light;
 import com.troyberry.math.*;
-import com.troyberry.opengl.mesh.*;
+import com.troyberry.opengl.loading.texture.Texture;
+import com.troyberry.opengl.mesh.Vao;
 import com.troyberry.opengl.util.*;
 
 public class PlanetRenderer {
@@ -17,46 +18,38 @@ public class PlanetRenderer {
 		shader = new PlanetShader();
 	}
 
-	public void render(Planet planet, ICamera camera, Light light) {
-		prepare(planet, camera, light);
+	public void render(Planet planet, ICamera camera, Light light, Texture planetTexture) {
+		prepare(planet, camera, light, planetTexture);
 		Vao mesh = planet.getMesh();
-		mesh.bind();
-		glEnableVertexAttribArray(0);
-		glEnableVertexAttribArray(1);
-		glEnableVertexAttribArray(2);
+		mesh.bind(0, 4);
 		glDrawElements(GL_TRIANGLES, mesh.getIndexCount(), GL_UNSIGNED_INT, 0);
-		mesh.unbind();
-		glDisableVertexAttribArray(0);
-		glDisableVertexAttribArray(1);
-		glDisableVertexAttribArray(2);
+		mesh.unbind(0, 4);
 		finish();
 	}
 
-	private boolean cull = false;
-
-	private void prepare(Planet planet, ICamera camera, Light light) {
-		if (Controls.BACK_FACE_CULL.hasBeenPressed()) cull = !cull;
+	private void prepare(Planet planet, ICamera camera, Light light, Texture planetTexture) {
 		shader.start();
 		shader.projectionMatrix.loadMatrix(camera.getProjectionMatrix());
 		shader.viewMatrix.loadMatrix(camera.getViewMatrix());
 		Vector3d rot = planet.getRotation();
-		shader.modelMatrix
-				.loadMatrix(Matrix4d.multiply(GLMaths.createTransformationMatrix(planet.getPosition()), GLMaths.createRotationMatrix(rot.x, rot.y, rot.z)));
+		shader.modelMatrix.loadMatrix(GLMaths.createTransformationMatrix(planet.getPosition()));
 		shader.lightPos.loadVec3(light.getPosition());
 		shader.lightColor.loadVec3(light.getColor());
-		shader.ambientLighting.loadVec3(0.1f);
-		shader.enableLighting.loadBoolean(false);
+		shader.disableLighting.loadBoolean(true);
+
+		planetTexture.bind(0, shader.planetTexture);
+
 		GLUtil.disableBlending();
 		GLUtil.enableDepthTesting();
-		GLUtil.cullBackFaces(cull);
+		GLUtil.cullBackFaces(true);
 	}
 
 	private void finish() {
 		shader.stop();
 	}
 
-	public void cleanUp() {
-		shader.cleanUp();
+	public void delete() {
+		shader.delete();
 	}
 
 }

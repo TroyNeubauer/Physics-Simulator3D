@@ -14,7 +14,8 @@ import com.troyberry.util.Interpolation.*;
 
 public class Planet extends Body {
 
-	private static CustomKeyFrameManager<Range> planetRadiusToMountainHeightMultaplier = new CustomKeyFrameManager<Range>(InterpolationType.COSINE);
+	private static CustomKeyFrameManager<Range> planetRadiusToMountainHeightMultaplier = new CustomKeyFrameManager<Range>(
+			InterpolationType.COSINE);
 
 	private static Vector3f color = new Vector3f(1, 0, 1);
 	private static Vector3f color2 = new Vector3f(0, 0, 1);
@@ -38,6 +39,7 @@ public class Planet extends Body {
 	private ArrayList<IcosphereFace> faces;
 	private ArrayList<Vector3f> colors;
 	private ArrayList<Vector3f> normals;
+	private ArrayList<Vector2f> textureCoords;
 
 	private boolean dataNeedsUpdating = true;
 
@@ -56,7 +58,7 @@ public class Planet extends Body {
 
 	public Planet(Vector3d position, Vector3d velocity, Vector3d rotation, Vector3d rotationVelocity, long seed, int initalRecursion) {
 		super(position, velocity, rotation, rotationVelocity);
-		this.radius = Maths.randRange((double) Constants.TEN_KILOMETERS, Constants.ONE_THOUSAND_KILOMETERS * 30.0f);//between 10KM and 15,000KM
+		this.radius = Maths.randRange((double) Constants.TEN_KILOMETERS, Constants.ONE_THOUSAND_KILOMETERS * 30.0f);
 		this.rockeyness = Maths.randRange(0.5f, 1.6f);
 		this.midPointsCache = new Hashtable<Long, Integer>(25 * Maths.pow(4, initalRecursion), 0.8f);
 		this.vertices = new ArrayList<Vector3d>(getVertexCount(initalRecursion));
@@ -65,16 +67,15 @@ public class Planet extends Body {
 		this.seed = seed;
 
 		this.maxMountain = Math.abs(Maths.randRange(planetRadiusToMountainHeightMultaplier.getValue(radius)));
-		System.out.println("radius " + Constants.getDistanceText(radius) + ", max Mt." + Constants.getDistanceText(maxMountain) + ", rockeyness " + rockeyness);
+		System.out.println("radius " + Constants.getDistanceText(radius) + ", max Mt." + Constants.getDistanceText(maxMountain)
+				+ ", rockeyness " + rockeyness);
 		this.noise = new SimplexNoise(maxMountain, rockeyness, seed);
 
 		Timer t = new Timer();
 		setup(initalRecursion, (float) radius);
 		t.stop();
-		System.out.println("gen time " + t.getTime());
+		// System.out.println("gen time " + t.getTime());
 		this.mesh = getEntireMesh();
-
-		System.out.println(i);
 	}
 
 	public void update(float delta) {
@@ -86,24 +87,28 @@ public class Planet extends Body {
 		Vector3d[] result = new Vector3d[2];
 		double a = Maths.randRange(-Math.PI, Math.PI);
 		double b = Maths.randRange(-Math.PI / 2.0, Math.PI / 2.0);
-		result[1] = new Vector3d(radius * Maths.cosFloat(b) * Maths.sinFloat(a), radius * Maths.cosFloat(b) * Maths.cosFloat(a), radius * Maths.sinFloat(b));
-
-		result[1] = new Vector3d(0, radius, 0, radius);
+		result[1] = new Vector3d(radius * Maths.cosFloat(b) * Maths.sinFloat(a), radius * Maths.cosFloat(b) * Maths.cosFloat(a),
+				radius * Maths.sinFloat(b));
+		double lat = 0, log = 0;
+		result[1] = new Vector3d(Maths.getX(radius, lat, log), Maths.getY(radius, lat, log), Maths.getZ(radius, lat, log), radius);
 
 		result[0] = Vector3d.add(result[1], position);
-		result[0] = Vector3d.addLength(result[0], Constants.ONE_METER);
+		result[0] = Vector3d.addLength(result[0], Constants.ONE_KILOMETER * 10000);
 		result[1].normalise();
 		return result;
 	}
 
 	public double getAdd(SimplexNoise noise, double x, double y, double z, double maxDistance) {
 		double value = noise.getNoise(x, y, z);// It will be in +- this range
-		double range = noise.getLargestFeature() * noise.getPersistence();// Get a noise value
-		value += range;//Change from -range-range to 0-2 * range
-		value /= 2.0;//Change from 0-2 * range to 0-range
-		value /= range;//Change from 0-range to 0-1
-		value *= maxDistance;//Change from 0-1 to 0-maxDistance
-		return value;//Return the finalized value
+		double range = noise.getLargestFeature() * noise.getPersistence();// Get
+																			// a
+																			// noise
+																			// value
+		value += range;// Change from -range-range to 0-2 * range
+		value /= 2.0;// Change from 0-2 * range to 0-range
+		value /= range;// Change from 0-range to 0-1
+		value *= maxDistance;// Change from 0-1 to 0-maxDistance
+		return value;// Return the finalized value
 	}
 
 	public int add(Vector3d vec) {
@@ -137,7 +142,7 @@ public class Planet extends Body {
 		faces.add(new IcosphereFace(new Vector3i(0, 7, 10), 1));
 		faces.add(new IcosphereFace(new Vector3i(0, 10, 11), 1));
 
-		// 5 adjacent indices 
+		// 5 adjacent indices
 		faces.add(new IcosphereFace(new Vector3i(1, 5, 9), 1));
 		faces.add(new IcosphereFace(new Vector3i(5, 11, 4), 1));
 		faces.add(new IcosphereFace(new Vector3i(11, 10, 2), 1));
@@ -151,7 +156,7 @@ public class Planet extends Body {
 		faces.add(new IcosphereFace(new Vector3i(3, 6, 8), 1));
 		faces.add(new IcosphereFace(new Vector3i(3, 8, 9), 1));
 
-		// 5 adjacent indices 
+		// 5 adjacent indices
 		faces.add(new IcosphereFace(new Vector3i(4, 9, 5), 1));
 		faces.add(new IcosphereFace(new Vector3i(2, 4, 11), 1));
 		faces.add(new IcosphereFace(new Vector3i(6, 2, 10), 1));
@@ -166,6 +171,7 @@ public class Planet extends Body {
 
 		List<Vector3d> newVertices = new ArrayList<Vector3d>(vertices.size());
 		colors = new ArrayList<Vector3f>(vertices.size());
+		textureCoords = new ArrayList<Vector2f>(vertices.size());
 		double range = 10.0;
 		double mult = 20.0;
 
@@ -179,11 +185,11 @@ public class Planet extends Body {
 			origionalValue /= 2.0;
 			origionalValue += 0.25;
 
-			//newVertices.add(Vector3d.scale(vertex, (float) value));
+			// newVertices.add(Vector3d.scale(vertex, (float) value));
 			colors.add(color2);
 		}
 
-		//vertices = newVertices;
+		// vertices = newVertices;
 	}
 
 	int i = 0;
@@ -252,7 +258,8 @@ public class Planet extends Body {
 		List<Integer> localIcosphereFacesToRemove = new ArrayList<Integer>();
 		for (int i = 0; i < faces.size(); i++) {
 			IcosphereFace face = faces.get(i);
-			if (Maths.rayTriangleIntersect(position, direction, vertices.get(face.face.x), vertices.get(face.face.y), vertices.get(face.face.z))) {
+			if (Maths.rayTriangleIntersect(position, direction, vertices.get(face.face.x), vertices.get(face.face.y),
+					vertices.get(face.face.z))) {
 				localFaces.add(face);
 				localIcosphereFacesToRemove.add(i);
 			}
@@ -272,12 +279,13 @@ public class Planet extends Body {
 				Vector3d p1 = vertices.get(face.face.x);
 				Vector3d p2 = vertices.get(face.face.y);
 				Vector3d p3 = vertices.get(face.face.z);
-				if(Maths.getDistanceBetweenPoints(p1, p2) < minTriangleEdgeLength) {
+				if (Maths.getDistanceBetweenPoints(p1, p2) < minTriangleEdgeLength) {
 					breakOut = true;
 					break;
 				}
 
-				if (Maths.rayTriangleIntersect(position, direction, p1, p2, p3) || (Maths.minTriangleDistance(p1, p2, p3, pos) < minDistance)) {
+				if (Maths.rayTriangleIntersect(position, direction, p1, p2, p3)
+						|| (Maths.minTriangleDistance(p1, p2, p3, pos) < minDistance)) {
 					int n1loc = getMiddle(face.face.x, face.face.y);
 					int n2loc = getMiddle(face.face.y, face.face.z);
 					int n3loc = getMiddle(face.face.z, face.face.x);
@@ -290,7 +298,7 @@ public class Planet extends Body {
 					localFaces.add(i, new IcosphereFace(new Vector3i(n3loc, n2loc, face.face.z), newIndex));
 				}
 			}
-			if(breakOut) break;
+			if (breakOut) break;
 		}
 		for (int i = 0; i < localIcosphereFacesToRemove.size(); i++) {
 			int index = localIcosphereFacesToRemove.get(i);
@@ -316,25 +324,27 @@ public class Planet extends Body {
 
 	private Vao getEntireMesh() {
 
-		if (dataNeedsUpdating) calculateNormals();
+		if (dataNeedsUpdating) calculateData();
 
 		Vao vao = Vao.create();
 		givenVaos.add(vao);
 		vao.createIndexBuffer(LoaderUtils.createIndices(faces));
 		vao.createAttribute(0, LoaderUtils.createDataBufferFloat(vertices), 3, false, "positions");
-		vao.createAttribute(1, LoaderUtils.createDataBuffer(colors), 3, false, "colors");
-		vao.createAttribute(2, LoaderUtils.createDataBuffer(normals), 3, false, "normals");
+		vao.createAttribute(1, LoaderUtils.createDataBufferVec3f(colors), 3, false, "colors");
+		vao.createAttribute(2, LoaderUtils.createDataBufferVec2f(textureCoords), 2, false, "textureCoords");
+		vao.createAttribute(3, LoaderUtils.createDataBufferVec3f(normals), 3, false, "normals");
 
 		return vao;
 	}
 
-	private void calculateNormals() {
+	private void calculateData() {
 		normals = new ArrayList<Vector3f>(vertices.size());
 		for (int i = 0; i < vertices.size(); i++)
 			normals.add(new Vector3f());
 
 		for (IcosphereFace IcosphereFace : faces) {
-			Vector3f normal = Maths.calculateNormalFloat(vertices.get(IcosphereFace.face.x), vertices.get(IcosphereFace.face.y), vertices.get(IcosphereFace.face.z));
+			Vector3f normal = Maths.calculateNormalFloat(vertices.get(IcosphereFace.face.x), vertices.get(IcosphereFace.face.y),
+					vertices.get(IcosphereFace.face.z));
 			normals.get(IcosphereFace.face.x).add(normal);
 			normals.get(IcosphereFace.face.y).add(normal);
 			normals.get(IcosphereFace.face.z).add(normal);
@@ -343,10 +353,18 @@ public class Planet extends Body {
 		for (int i = 0; i < normals.size(); i++)
 			normals.get(i).normalise();
 
+		textureCoords = new ArrayList<Vector2f>(vertices.size());
+		for (Vector3d vec : vertices) {
+			Vector3d vertex = Vector3d.setLength(vec, -1.0);// -1 because we need to invert the vector to point at the center of the sphere
+			double u = 0.5 + Math.atan2(vertex.z, vertex.x) / Maths.PI2;
+			double v = 0.5 - Math.asin(vertex.y) / Maths.PI;
+			textureCoords.add(new Vector2f((float) u, (float) v));
+		}
+
 		dataNeedsUpdating = false;
 	}
 
-	public void cleanUp() {
+	public void delete() {
 		for (Vao vao : givenVaos) {
 			vao.delete();
 		}
@@ -354,22 +372,22 @@ public class Planet extends Body {
 
 	public static int getVertexCount(int recursion) {
 		switch (recursion) {
-		case 0:
-			return 12;
-		case 1:
-			return 72;
-		case 2:
-			return 312;
-		case 3:
-			return 1272;
-		case 4:
-			return 5112;
-		case 5:
-			return 20472;
-		case 6:
-			return 81912;
-		case 7:
-			return 327672;
+			case 0:
+				return 12;
+			case 1:
+				return 72;
+			case 2:
+				return 312;
+			case 3:
+				return 1272;
+			case 4:
+				return 5112;
+			case 5:
+				return 20472;
+			case 6:
+				return 81912;
+			case 7:
+				return 327672;
 
 		}
 		return 10000;

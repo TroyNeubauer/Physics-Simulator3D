@@ -2,11 +2,13 @@
 
 in vec3 position;
 in vec3 color;
+in vec2 textureCoords;
 in vec3 normal;
 
 out vec3 passColor;
 out vec3 passNormal;
 out vec3 toLightVector;
+out vec2 passTextureCoords;
 
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
@@ -22,4 +24,5 @@ void main(void) {
 	passColor = color;
 
 	toLightVector = normalize(lightPos - worldPos.xyz);
+	passTextureCoords = textureCoords;
 }

@@ -7,7 +7,7 @@ import com.troyberry.opengl.util.*;
 
 public class FreeCamera implements ICamera {
 
-	private SmoothDouble speed = new SmoothDouble(100, 5.0);
+	private SmoothDouble speed = new SmoothDouble(100000, 5.0);
 	private double near, far;
 	private Vector3d position;
 	private Vector3d forward, right, up;
@@ -43,8 +43,7 @@ public class FreeCamera implements ICamera {
 		if (Controls.UP.isPressed()) total.add(up);
 		if (Controls.DOWN.isPressed()) total.add(Vector3d.negate(up));
 		if (Mouse.hasScrolled()) {
-			speed.setTarget(speed.getTarget() + speed.getTarget() * (Mouse.getDWheel() * 30) * Window.getFrameTimeSeconds());
-			speed.clamp(0.0000005f, 2500000f);
+			speed.setTarget(speed.getTarget() + speed.getTarget() * (Mouse.getDWheel() * 15) * Window.getFrameTimeSeconds());
 			Mouse.resetScroll();
 		}
 		speed.update(delta);
@@ -132,6 +131,13 @@ public class FreeCamera implements ICamera {
 	@Override
 	public void setUpDirectionFloat(Vector3f newUp) {
 		setUpDirectionDouble(newUp.toDouble());
+	}
+	
+	@Override
+	public void setForwardDirection(Vector3d newForward) {
+		this.forward = Vector3d.normalise(newForward);
+		this.right = Vector3d.arbitraryOrthogonal(forward);
+		this.up = Vector3d.cross(forward, right);
 	}
 
 	@Override

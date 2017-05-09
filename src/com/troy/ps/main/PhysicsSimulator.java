@@ -3,11 +3,15 @@ package com.troy.ps.main;
 import java.io.*;
 import java.text.*;
 import java.util.*;
+import java.util.logging.*;
 
+import org.apache.commons.cli.*;
+import org.apache.commons.cli.ParseException;
 import org.lwjgl.opengl.*;
 
 import com.troy.ps.gamestate.*;
 import com.troy.ps.glRequestProcessing.*;
+import com.troyberry.graphics.*;
 import com.troyberry.logging.*;
 import com.troyberry.opengl.input.*;
 import com.troyberry.opengl.util.*;
@@ -15,32 +19,38 @@ import com.troyberry.opengl.util.GLUtil;
 import com.troyberry.resources.*;
 import com.troyberry.util.*;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+
+import static com.troy.ps.main.CommandArgsOptions.*;
+
 public class PhysicsSimulator implements Runnable {
 
+	private static Logger logger = LogManager.getLogger(PhysicsSimulator.class);
 	public static final boolean DEBUG = true;
 	public static final boolean DISABLE_CRASH_REPORTS = DEBUG;
 
-	/** A 100MiB preallocation to ensure the heap is reasonably sized. */
-	public static byte[] memoryReserve = new byte[(int) BinarySize.MEGABYTE.getValue() * 100];
+	/** A 100MB preallocation to ensure the heap is reasonably sized. */
+	public static byte[] memoryReserve = new byte[BinarySize.MEGABYTE.getIntValue() * 100];
 
 	private Window window;
 	private boolean running;
 	private boolean hasCrashed;
 	private CrashReport crashReport;
+	private CommandLine options;
 
-	public PhysicsSimulator(String[] args) {
+	public PhysicsSimulator(String[] args) throws ParseException {
+		this.options = new DefaultParser().parse(new CommandArgsOptions(), args);
 	}
 
 	/**
 	 * Starts the game: initializes the canvas, the title, the settings, etc.
 	 */
 	public void startGame() throws Exception {
-		
-		boolean fullscreen = true;
+		logger.info("Starting Game");
 		VersionManager.setVersion(new Version());
 		GLUtil.init();
-		window = fullscreen ? new Window() : new Window(1440, 810);
-		GL11.glClearColor(1, 1, 1, 1);
+		createWindow();
 		window.setClearColor(1, 1, 1);
 		window.enableFPSInTitle();
 		window.center();
@@ -51,6 +61,23 @@ public class PhysicsSimulator implements Runnable {
 		GameStateManager.checkForChanges(window);
 
 		Updater.init(window);
+	}
+
+	private void createWindow() {
+		int width = 900, height = 540;
+		boolean fullscreen = options.hasOption(FULLSCREEN);
+		if (!fullscreen) {// If we don't want fullscreen
+			if (options.hasOption(WIDTH) && options.hasOption(HEIGHT)) {
+				width = MiscUtil.getIntOrDefaultValue(options.getOptionValue(WIDTH), "Invalid width!", width);
+				height = MiscUtil.getIntOrDefaultValue(options.getOptionValue(HEIGHT), "Invalid height!", height);
+			} else if (options.hasOption(WIDTH) || options.hasOption(HEIGHT))
+				System.out.println("Only one window dimension provided! Ignoring "
+						+ (options.hasOption(WIDTH) ? "width " + options.getOptionValue(WIDTH)
+								: "height " + options.getOptionValue(HEIGHT)));
+			window = new Window(width, height);
+
+		} else window = new Window();// Create the fullscreen window
+
 	}
 
 	@Override
@@ -76,7 +103,7 @@ public class PhysicsSimulator implements Runnable {
 						freeMemory();
 						Log.error("Out of memory!!!\n Try running with the VM arg \"-Xss1G\" \n");
 						e.printStackTrace();
-						//TODO: show out of memory screen
+						// TODO: show out of memory screen
 						System.exit(1);
 					}
 					if (window.isCloseRequested()) break;
@@ -113,7 +140,8 @@ public class PhysicsSimulator implements Runnable {
 		if (!DISABLE_CRASH_REPORTS) {
 			try {
 				File crashReportFolder = new File(System.getProperty("user.dir"), "Crash Reports");
-				File reportFile = new File(crashReportFolder, "crash-" + (new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")).format(new Date()) + ".txt");
+				File reportFile = new File(crashReportFolder,
+						"crash-" + (new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")).format(new Date()) + ".txt");
 				crashReportFolder.mkdirs();
 				reportFile.createNewFile();
 				BufferedWriter writer = new BufferedWriter(new FileWriter(reportFile));
@@ -127,7 +155,7 @@ public class PhysicsSimulator implements Runnable {
 
 	public void freeMemory() {
 		memoryReserve = new byte[0];
-		//TODO: other memory stuff later
+		// TODO: other memory stuff later
 		System.gc();
 	}
 
