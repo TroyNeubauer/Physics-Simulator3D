@@ -1,0 +1,29 @@
+apply plugin: 'java-library'
+
+project.ext.lwjglVersion = "3.2.1"
+project.ext.lwjglNatives = "natives-windows"
+
+repositories {
+	mavenCentral()
+	jcenter()
+}
+
+dependencies {
+	implementation "org.lwjgl:lwjgl:$lwjglVersion"
+	implementation "org.lwjgl:lwjgl-assimp:$lwjglVersion"
+	implementation "org.lwjgl:lwjgl-glfw:$lwjglVersion"
+	implementation "org.lwjgl:lwjgl-jemalloc:$lwjglVersion"
+	implementation "org.lwjgl:lwjgl-opencl:$lwjglVersion"
+	implementation "org.lwjgl:lwjgl-openal:$lwjglVersion"
+	implementation "org.lwjgl:lwjgl-opengl:$lwjglVersion"
+	implementation "org.lwjgl:lwjgl-stb:$lwjglVersion"
+	implementation group: 'commons-cli', name: 'commons-cli', version: '1.4'
+	implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.2'
+	runtimeOnly "org.lwjgl:lwjgl:$lwjglVersion:$lwjglNatives"
+	runtimeOnly "org.lwjgl:lwjgl-assimp:$lwjglVersion:$lwjglNatives"
+	runtimeOnly "org.lwjgl:lwjgl-glfw:$lwjglVersion:$lwjglNatives"
+	runtimeOnly "org.lwjgl:lwjgl-jemalloc:$lwjglVersion:$lwjglNatives"
+	runtimeOnly "org.lwjgl:lwjgl-openal:$lwjglVersion:$lwjglNatives"
+	runtimeOnly "org.lwjgl:lwjgl-opengl:$lwjglVersion:$lwjglNatives"
+	runtimeOnly "org.lwjgl:lwjgl-stb:$lwjglVersion:$lwjglNatives"
+}
